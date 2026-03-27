@@ -185,7 +185,7 @@ their names — this is fine inside `<Factor>` tags.
 | Formula | Description |
 |---------|-------------|
 | `AccrualsTTM/AstTot(0,TTM)` | Accruals to total assets |
-| `Eval(IsNA(NetIncBXor(0,TTM)) OR NetIncBXor(0,TTM)=0, 0, OperCashFlTTM/Abs(NetIncBXor(0,TTM)))` | Cash flow quality |
+| `Eval(NetIncBXor(0,TTM) = NA OR NetIncBXor(0,TTM)=0, 0, OperCashFlTTM/Abs(NetIncBXor(0,TTM)))` | Cash flow quality |
 
 ### Leverage / Solvency
 | XML Factor Name | Description |
@@ -328,19 +328,19 @@ Note: P123 cash flow pre-built factor names drop parentheses:
 		</Composite>
 		<Composite Name="Cash Flow Quality" Weight="50" RankType="Higher">
 			<StockFormula Weight="100" RankType="Higher" Name="OpCF to Net Income" Description="" Scope="Universe">
-				<Formula>Eval(IsNA(NetIncBXor(0,TTM)) OR NetIncBXor(0,TTM)=0, 0, OperCashFlTTM/Abs(NetIncBXor(0,TTM)))</Formula>
+				<Formula>Eval((NetIncBXor(0,TTM) = NA OR NetIncBXor(0,TTM)=0, 0, OperCashFlTTM/Abs(NetIncBXor(0,TTM)))</Formula>
 			</StockFormula>
 		</Composite>
 	</Composite>
 	<Composite Name="Investment Risk" Weight="10" RankType="Higher">
 		<Composite Name="Asset Growth" Weight="60" RankType="Higher">
 			<StockFormula Weight="100" RankType="Lower" Name="Total Asset Growth" Description="" Scope="Universe">
-				<Formula>Eval(IsNA(AstTot(1,TTM)) OR AstTot(1,TTM)=0, 0, AstTot(0,TTM)/AstTot(1,TTM)-1)</Formula>
+				<Formula>Eval(AstTot(1,TTM) = NA OR AstTot(1,TTM)=0, 0, AstTot(0,TTM)/AstTot(1,TTM)-1)</Formula>
 			</StockFormula>
 		</Composite>
 		<Composite Name="CapEx Intensity" Weight="40" RankType="Higher">
 			<StockFormula Weight="100" RankType="Lower" Name="CapEx to Sales" Description="" Scope="Universe">
-				<Formula>Eval(IsNA(Sales(0,TTM)) OR Sales(0,TTM)=0, 0, CapExTTM/Sales(0,TTM))</Formula>
+				<Formula>Eval(Sales(0,TTM) = NA OR Sales(0,TTM)=0, 0, CapExTTM/Sales(0,TTM))</Formula>
 			</StockFormula>
 		</Composite>
 	</Composite>

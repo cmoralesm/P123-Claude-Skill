@@ -72,7 +72,7 @@ Eval(condition, value_if_true, value_if_false)
 
 ```
 // Use alternate metric when PE is NA
-Eval(IsNA(PEExclXorTTM), Pr2SalesTTM, PEExclXorTTM)
+IsNA(PEExclXorTTM, Pr2SalesTTM)
 
 // Sector-specific thresholds
 Eval(Sector = 40, DbtTot2EqQ < 15, DbtTot2EqQ < 2)
@@ -280,7 +280,7 @@ OpInc(0, TTM)             // default: FALLBACK
 
 ```
 IsNA(PEExclXorTTM, 999)                // replace NA with 999
-Eval(IsNA(PEExclXorTTM), 999, PEExclXorTTM)  // equivalent
+Eval(PEExclXorTTM = NA, 999, PEExclXorTTM)  // equivalent
 
 Bound(PEExclXorTTM, 0, 200)            // clip to range [0, 200]
 Bound(PEExclXorTTM, 0, 200, TRUE)      // return NA if outside range
@@ -371,22 +371,22 @@ SetVar(@sue, EPSSUE(0, QTR))
 
 ```
 MktCap > 500
-AvgDailyTot(63) > 500        // avg daily dollar volume > $500K over 63 bars
+AvgDailyTot(63) > 500         // avg daily dollar volume > $500K over 63 bars
 Close(0) > 5                  // minimum share price
 ```
 
 ### Sector/Industry filtering
 
 ```
-Sector != 40                  // exclude Financials
-Industry != 40201020          // exclude REITs
+Sector != 30                  // exclude Financials
+Industry != 302520            // exclude REITs
 ```
 
 ### Using benchmarks and indices
 
 ```
-Close(0, $SPY)                // SPY price
+Close(0, GetSeries("SPY"))    // SPY price
 Close(0, #Bench)              // benchmark price
 Close(0, #Industry)           // industry index price
-Ret%Chg(252) > Ret%Chg(252, 0, $SPY)  // beat SPY total return
+Ret%Chg(252) > Ret%Chg(252, 0, GetSeries("SPY"))  // beat SPY total return
 ```

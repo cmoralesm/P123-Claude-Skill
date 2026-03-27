@@ -56,7 +56,7 @@ SetVar(@myPE, PEExclXorTTM)
 @myPE < 20
 
 // Conditional logic
-Eval(IsNA(PEExclXorTTM), Pr2SalesTTM < 2, PEExclXorTTM < 20)
+Eval(PEExclXorTTM = NA, Pr2SalesTTM < 2, PEExclXorTTM < 20)
 
 // Cross-sectional ranking (#ASC = lower is better)
 FRank("PEExclXorTTM", #All, #ASC) > 80
@@ -157,7 +157,7 @@ Minimal correct example:
 
 ## Quick Start Examples
 
-### Screen Rule: Cheap, Profitable, Momentum
+### Screen or Universe Rules: Cheap, Profitable, Momentum
 
 ```
 // Universe filter
@@ -172,6 +172,31 @@ ROE%TTM > 15
 
 // Momentum (12-1 month)
 Ret%Chg(252, 21) > 0
+```
+
+### Strategy Rules
+
+### Buy Rules
+
+Buy rules tell a Strategy which stocks/ETFs can be bought. All rules must be true to buy (and'ed). If no buy rules are specified, the strategy will keep buying the next highest ranked stock until all cash has been used. This is the syntax used when building a full set of buy rules:
+
+```
+[Buy1] Close(0) > SMA_W(43)
+[Buy2] RankPos < 5
+```
+
+### Sell Rules
+
+Sell rules tell the Strategy when to sell a position. Any single rule that is true triggers a sell (or'ed). Strategies often but not always sell on RankPos or Rank. This is the syntax used when building a full set of Sell rules for a Strategy:
+
+```
+[Sell1] RankPos > 80
+[Sell2] Rank < 60
+[OFF] [Sell3] // This rule is disabled
+[Sell4] FRank("LoopAvg(`Spread(CTR)`,20)",#All,#Asc) <= 5
+[Sell5] LoopMin("AvgDailyTot(5,CTR)",10,0,5) <= 50000
+[Sell6] Frank("FCount(`sma(50) > sma(200)`, #Industry) / FCount(`1`, #Industry)") <= 25
+[Sell7] SecCount >= 5 and IndCount >= 2 // This is a comment
 ```
 
 ### API: Run a Screen
