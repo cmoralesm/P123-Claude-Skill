@@ -33,16 +33,18 @@ This skill has 8 reference files. Read only what's needed for the task:
 |------|---------------|
 | Writing P123 formulas (any kind) | `references/formula-quick-reference.md` |
 | Using financial statement data (balance sheet, income, cash flow) | `references/fundamental-data.md` |
-| Technical analysis (RSI, MACD, SMA, Bollinger, etc.) | `references/technical-functions.md` |
-| Advanced logic (SetVar, FHist, FRank, Eval, Aggregate, Loop, Regression) | `references/advanced-functions.md` |
+| Using factors and functions (determine which reference file to use with this index) | `references/factors-and-functions/index.md` |
 | Building or editing a ranking system XML | `references/ranking-system-xml.md` |
-| Macro data, FRED series, universe IDs, constants | `references/macros-constants.md` |
 | Python API calls (p123api wrapper) | `references/api-reference.md` |
 | AI Factor predictions (ML models) | `references/ai-factor-reference.md` |
 
 For ranking system XML tasks, ALWAYS read `ranking-system-xml.md` first — it contains
 the verified schema, correct tag names, known formula errors, and a working example.
 For most other tasks, start with `formula-quick-reference.md` + the relevant domain file.
+
+IMPORTANT: When using factor and function names, always verify the factor name and syntax in the reference documents. Your training doesn't include enough samples of P123 syntax for you to do a good job by yourself.
+
+Remember that not all factors and variables can be used in all parts of P123. Some things only work in a screen or universe while others will work everywhere. Some factors are ETF system specific.
 
 ## Key Concepts
 
