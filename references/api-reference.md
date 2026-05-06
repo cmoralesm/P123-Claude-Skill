@@ -97,7 +97,13 @@ client.data_universe({
 }, to_pandas=True)
 ```
 
-**Common Universes**: SP500, SP400, SP600, SP1500, DJIA, Prussell1000, Prussell2000, Prussell3000, NASDAQ100, ALLSTOCKS, ALLFUND, LargeCap, MidCap, SmallCap, MicroCap
+**Common Universes**:
+- US: `SP500`, `SP400`, `SP600`, `SP1500`, `DJIA`, `NASDAQ100`, `Prussell1000`/`2000`/`3000`, `ALLFUND`, `PRIMARYUSA`, `ALLSTOCKS`, `LargeCap`, `MidCap`, `SmallCap`, `MicroCap`, `NanoCap`
+- Canada: `ALLFUNDCAN`, `PRIMARYCAN`, `ALLSTOCKSCAN`, `SPTSX`, `SPTSX60`, `TSX`, `TSXV`
+- Europe: `ALLFUNDEUR`, `PRIMARYEUR`, `EU200L`, `EU200M`, `EU200S`, `EU600`
+- Multi-region: `PRIMARYNOAM`, `PRIMARYNOAT`, `TRADENOAM`, `TRADENOAT`, `TRADEEUR`
+
+See `references/macros-constants.md` for the complete list with descriptions.
 
 ---
 
@@ -212,9 +218,9 @@ client.screen_run({
         'ranking': {'formula': 'PEExclXorTTM', 'lowerIsBetter': True},  # inline formula
         # Rules
         'rules': [
-            {'formula': 'MktCap > 1000', 'type': 'long'},
-            {'formula': 'ROE%TTM > 10', 'type': 'common'},
-            {'formula': 'Close(0) > SMA(200,0)', 'type': 'long'}
+            {'formula': 'MktCap > 1000'},
+            {'formula': 'ROE%TTM > 10'},
+            {'formula': 'Close(0) > SMA(200,0)'}
         ]
     },
     'asOfDt': '2025-03-08',
@@ -225,6 +231,8 @@ client.screen_run({
 # Run existing screen by ID
 client.screen_run({'screen': 12345}, True)
 ```
+
+**Note on rule `type` field**: For `method: 'long'` (long-only) screens, rules must **not** include a `type` field — the API rejects it with `"Rule type parameter should not be present"`. The per-rule `type` field (`'long'`, `'short'`, or `'common'`) is only valid for `'long/short'` and `'hedged'` screens, where it specifies which side of the book a rule applies to.
 
 ### screen_backtest() — Backtest a screen (5 credits)
 
