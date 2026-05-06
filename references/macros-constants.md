@@ -71,6 +71,7 @@
 | `MidCap` | Mid Cap stocks |
 | `SmallCap` | Small Cap stocks |
 | `MicroCap` | Micro Cap stocks |
+| `NanoCap` | Nano Cap stocks |
 | `NYSE` | NYSE-listed only |
 | `NASD` | NASDAQ-listed only |
 | `NYSEMKT` | NYSE MKT (formerly AMEX) |
@@ -78,12 +79,51 @@
 | `NOOTC` | No OTC (exclude OTC stocks) |
 | `$ADR` | American Depositary Receipts |
 | `MasterLP` | Master Limited Partnerships |
+| `TRADEUSA` | Easy to Trade US (liquidity-filtered) |
+
+### USA — All Listings
+| ID | Description |
+|----|-------------|
+| `ALLFUND` | United States — all stocks with fundamentals (incl. Foreign Primary) |
+| `PRIMARYUSA` | United States (Primary listings only) |
+| `ALLSTOCKS` | United States — all listed stocks |
+
+### Canada
+| ID | Description |
+|----|-------------|
+| `ALLFUNDCAN` | Canada — all stocks with fundamentals (incl. Foreign Primary) |
+| `PRIMARYCAN` | Canada (Primary listings only) |
+| `ALLSTOCKSCAN` | Canada — all listed stocks |
+| `ALLFUNDCDRCAD` | Canada (incl. Foreign Primary and CDRs) |
+| `CanadaTrust` | Canadian trusts |
+| `CDR` | Canadian Depositary Receipts |
+| `SPTSX` | S&P/TSX Composite |
+| `SPTSX60` | S&P/TSX 60 |
+| `TSX` | Toronto Stock Exchange |
+| `TSXV` | TSX Venture Exchange |
+
+### Europe
+| ID | Description |
+|----|-------------|
+| `ALLFUNDEUR` | Europe — all stocks with fundamentals (incl. Foreign Primary) |
+| `PRIMARYEUR` | Europe (Primary listings only) |
+| `EU200L` | Europe 200 Large Cap |
+| `EU200M` | Europe 200 Mid Cap |
+| `EU200S` | Europe 200 Small Cap |
+| `EU600` | Europe 600 |
+
+### Multi-region
+| ID | Description |
+|----|-------------|
+| `PRIMARYNOAM` | North America (Primary listings) |
+| `PRIMARYNOAT` | North Atlantic (Primary listings) |
+| `TRADENOAM` | Easy to Trade North America (liquidity-filtered) |
+| `TRADENOAT` | Easy to Trade North Atlantic (liquidity-filtered) |
+| `TRADEEUR` | Easy to Trade Europe (liquidity-filtered) |
 
 ### Special
 | ID | Description |
 |----|-------------|
-| `ALLSTOCKS` | All stocks in database |
-| `ALLFUND` | All stocks with fundamentals |
 | `ApiUniverse` | Custom universe created via API |
 
 ---
