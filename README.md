@@ -1,193 +1,128 @@
-# Portfolio123 Agent Skill
+# Portfolio123 Claude Skill
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Agent Skills](https://img.shields.io/badge/Standard-Agent_Skills-blueviolet.svg)](https://agentskills.io/)
-[![Works with](https://img.shields.io/badge/Works_with-Claude_Code_%7C_Cursor_%7C_Codex-blue.svg)](#installation)
-[![Functions](https://img.shields.io/badge/Functions-464+-brightgreen.svg)](#whats-covered)
-[![Factors](https://img.shields.io/badge/Factors-4456+-orange.svg)](#whats-covered)
+A [Claude Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) that turns
+Claude into a reliable Portfolio123 (P123) assistant: writing screen rules and formulas,
+building ranking-system XML, and pulling data through the REST API with the official
+`p123api` Python wrapper.
 
-A comprehensive [Agent Skill](https://agentskills.io/) for **[Portfolio123](https://www.portfolio123.com/)** — the systematic/quantitative equity research platform. This skill gives your AI coding agent deep knowledge of the P123 formula language, ranking systems, screening rules, backtesting, and the `p123api` Python wrapper.
+**v3.0.0** is a ground-up rebuild with **full dictionary coverage**: every entry of P123's
+official Factor Reference, extracted and verified programmatically on 2026-06-09 —
+**4,463 factors and 465 functions** across the 13 official categories, plus 473
+constants/series-IDs/operators, the complete REST API surface (28 paths, 33 operations), and
+all 38 public `p123api` client methods.
 
-Built for quant researchers, factor investors, and anyone who uses P123 programmatically.
+> Independent community project. Not affiliated with, sponsored by, or endorsed by
+> Portfolio123, Inc. All factor/function names and documentation excerpts belong to their
+> respective owners.
 
----
-
-## Why Use This?
-
-Portfolio123 has its own formula language with 464+ functions, 4456+ factors, and platform-specific conventions that differ from standard financial terminology (e.g., `DbtLT` not `LTDebt`, `Hi()` not `High()`, `OperCashFl` not `OpCashFl`). Without a dedicated skill, AI agents routinely hallucinate incorrect function names, wrong parameter orders, and non-existent syntax.
-
-This skill was cross-referenced line-by-line against the official [P123 528-page syntax reference](https://www.portfolio123.com/doc/doc_factors.jsp) and the [REST API documentation](https://api.portfolio123.com/docs/index.html) to ensure every function name, parameter, and example is accurate.
-
----
-
-## What's Covered
-
-| Reference File | Lines | Content |
-|---------------|-------|---------|
-| `SKILL.md` | ~225 | Entry point, key concepts, naming gotchas, quick-start examples |
-| `formula-quick-reference.md` | ~392 | Syntax, operators, SetVar, Eval, FRank, ZScore, FHist, NA handling, common patterns |
-| `fundamental-data.md` | ~388 | Balance sheet, income statement, cash flow functions & pre-built factors |
-| `technical-functions.md` | ~414 | OHLCV, returns, moving averages, MACD, RSI, volatility, trend, strategy functions |
-| `advanced-functions.md` | ~671 | FHist/Loop/Regression families, Aggregate, consensus estimates, insider/institutional, short interest |
-| `api-reference.md` | ~773 | Full `p123api` Python wrapper: data, rank, screen, strategy & books, data series, stock factors, AI Factor |
-| `ai-factor-reference.md` | ~441 | AI Factor ML predictions: parameters, response schema, feature extraction, operational gotchas |
-| `macros-constants.md` | ~321 | FRED macro series, universe IDs, FX rates, S&P 500 aggregates, constants |
-
-**Total: ~3,625 lines of reference material.**
-
-### Key areas:
-
-- **Formula Language** — Every function signature verified: fundamentals (`Sales()`, `DbtLT()`, `OperCashFl()`), technical (`RSI()`, `MACDD()`, `BetaFunc()`), advanced (`FRank()`, `FHistAvg()`, `LoopAvg()`, `LinReg()`)
-- **Pre-built Factors** — Naming patterns for 4,456+ auto-generated factors (growth, regression, per-share, ratios)
-- **Ranking Systems** — XML text-editor format, `NodeRank()`, `Rating()`, bucket performance testing
-- **Python API** — Complete `p123api` wrapper documentation with code examples for every endpoint
-- **Common Pitfalls** — Mapping table of 30+ common financial terms to their actual P123 function names
-- **Factor Strategy Patterns** — Value, momentum, quality, low-vol, BAB, Piotroski F-Score, earnings momentum
-
----
-
-## Installation
-
-### Claude Code (recommended)
-
-```bash
-git clone https://github.com/YOUR_USER/P123-Claude-Skill.git
-cp -r P123-Claude-Skill ~/.claude/skills/portfolio123/
-```
-
-Or from the `.skill` package:
-
-```bash
-unzip portfolio123.skill -d ~/.claude/skills/portfolio123/
-```
-
-### Cursor
-
-```bash
-cp -r portfolio123-skill ~/.cursor/skills/portfolio123/
-```
-
-### Codex / Gemini CLI
-
-```bash
-cp -r portfolio123-skill ~/.codex/skills/portfolio123/
-# or
-cp -r portfolio123-skill ~/.gemini/skills/portfolio123/
-```
-
-### Project-level (scoped to a single repo)
-
-```bash
-cp -r portfolio123-skill .claude/skills/portfolio123/
-```
-
-Once installed, your AI agent will automatically use the skill when you mention P123 formulas, ranking systems, screens, backtests, or API calls.
-
----
-
-## Skill Structure
+## What's inside
 
 ```
 portfolio123/
-├── SKILL.md                              # Entry point (always loaded)
-└── references/                           # Loaded on demand
-    ├── formula-quick-reference.md        # Syntax, operators, patterns
-    ├── fundamental-data.md               # Financial statement functions
-    ├── technical-functions.md            # Price, volume, technical indicators
-    ├── advanced-functions.md             # FHist, Loop, Regression, estimates
-    ├── api-reference.md                  # p123api Python wrapper
-    ├── ai-factor-reference.md            # AI Factor ML predictions
-    └── macros-constants.md               # FRED macros, universes, constants
+├── SKILL.md                      # Trigger description, routing table, anti-hallucination table
+├── references/
+│   ├── api.md                    # REST API + p123api wrapper (33 operations, 38 methods)
+│   ├── ratios-statistics.md      # 60 functions / 1,206 factors
+│   ├── financials.md             # 101 functions / 2,739 factors + vendor line-item mapping
+│   ├── fundamentals.md           # 61 functions / 124 factors
+│   ├── estimates.md              # 20 functions / 158 factors
+│   ├── technical.md              # 95 functions / 55 factors
+│   ├── advanced-functions.md     # 60 functions / 11 factors (FRank, FHist, Loops, ...)
+│   ├── strategy.md               # 4 functions / 51 factors + buy/sell rule patterns
+│   ├── universe-operations.md    # 8 functions
+│   ├── universe-filters.md       # 3 functions
+│   ├── benchmark-functions.md    # 1 function
+│   ├── industry-sector.md        # 1 function / 91 factors (RBICS classification)
+│   ├── taxonomy.md               # 8 functions / 8 factors (ETF vocabularies)
+│   ├── misc.md                   # 43 functions / 20 factors + 473 constants, series IDs, operators
+│   └── ranking-system-xml.md     # Validated ranking XML schema — always read before XML work
+├── scripts/                      # 9 runnable CLI examples + p123_helpers.py (see scripts/README.md)
+├── evals/evals.json              # 12 evaluation prompts (repo only; excluded from the .skill package)
+├── BUILD-STATE.md                # build & verification log for this release
+├── README.md · CHANGELOG.md · LICENSE · .gitignore
 ```
 
-The skill follows the [Agent Skills](https://agentskills.io/) standard with progressive disclosure: `SKILL.md` is always in context (~225 lines), and reference files are loaded only when relevant to the task.
+Every factor and function name in the reference files was validated against the extracted
+dictionary; "Common Mistakes" tables in each file list the names people (and language models)
+invent that do **not** exist, next to the verified correct ones.
 
----
+## Install
 
-## Example Prompts
+### Claude Code
 
-Once the skill is installed, you can ask your agent things like:
-
-```
-Write a P123 screen that finds cheap, high-quality stocks with positive momentum
-in the Russell 3000, excluding financials and REITs.
-```
-
-```
-Build a ranking system XML with 4 nodes: Value (30%), Momentum (25%),
-Quality (25%), and Low Volatility (20%). Use the best P123 factors for each.
+```bash
+# from this repo's root
+mkdir -p ~/.claude/skills
+cp -r . ~/.claude/skills/portfolio123
 ```
 
+Or install the packaged `portfolio123.skill` (a zip): unzip it into `~/.claude/skills/`.
+Project-scoped install: use `.claude/skills/portfolio123` inside your project instead.
+
+### claude.ai (web/desktop)
+
+Settings → Capabilities → Skills → **Upload skill** → select `portfolio123.skill`.
+(A paid plan with code execution enabled is required for skills.)
+
+### Cursor
+
+Cursor reads agent instructions from `AGENTS.md`/rule files rather than Claude skills.
+Two working options:
+
+1. Copy the repo into your project (e.g. `docs/p123-skill/`) and add a Cursor rule
+   (`.cursor/rules/p123.mdc`) that says: "For any Portfolio123/P123 task, read
+   `docs/p123-skill/SKILL.md` first and follow its routing table to the reference files."
+2. Or paste the contents of `SKILL.md` into your project rules and keep `references/`
+   in the workspace so the agent can open them.
+
+### Codex (OpenAI)
+
+Same pattern as Cursor: place this folder in your workspace and add to `AGENTS.md`:
+"For Portfolio123/P123 work, read `p123-skill/SKILL.md` and follow its routing table."
+
+## Using the example scripts
+
+```bash
+pip install p123api pandas
+export P123_API_ID=your_api_id        # PowerShell: $env:P123_API_ID = "..."
+export P123_API_KEY=your_api_key
+python scripts/01_auth_check.py
+python scripts/02_screen_run.py --universe SP500 --rule "Close(0) > 200" --max-holdings 10
+python scripts/07_price_history.py    # IBM by default — works on the API free trial
 ```
-Write Python code using p123api to download weekly factor data for the S&P 500
-including PE, ROE, 12-1 month momentum, and market cap, normalized with rank scaling.
-```
 
-```
-Replicate the Betting Against Beta (BAB) factor from Frazzini-Pedersen
-using P123 functions. Include beta calculation, ranking, and hedging logic.
-```
+API credentials: P123 Account Settings → API (paying subscription required; the spec's free
+trial covers `/data` and `/data/universe` for IBM, MSFT and INTC with 5 years of history).
+All scripts are read-only except `09_strategy_rebalance_dryrun.py`, which changes nothing
+unless run with `--execute` and a typed confirmation. See [scripts/README.md](scripts/README.md).
 
-```
-Create a P123 strategy sell rule with a 20% trailing stop that only triggers
-if the benchmark hasn't also dropped by the same amount.
-```
+## Example prompts
 
----
+- "Write a P123 screen for profitable small caps under 15x earnings with improving margins."
+- "Build a 4-node value/quality ranking system as XML."
+- "Why does my rule `Eval(IsNA(PEExclXorTTM), ...)` fail on P123?"
+- "Download PE, ROE and 12-month momentum for the SP500 universe as a DataFrame."
+- "What is the P123 factor for the Piotroski score, and how do I rank on it?"
 
-## Accuracy Notes
+## Accuracy & verification
 
-Every function in this skill was verified against:
-
-1. **P123 Syntax Reference PDF** (528 pages, v1.0 2026-02-25) — the complete formula/factor dictionary exported from Portfolio123
-2. **[Factor & Function Browser](https://www.portfolio123.com/doc/doc_factors.jsp)** — the live online reference (4,456 factors, 464 functions)
-3. **[p123api Help Center](https://portfolio123.customerly.help/en/dataminer-api/the-api-wrapper-p123api)** — official API wrapper documentation
-
-Common errors corrected vs. typical AI hallucinations:
-
-| AI Hallucination | Correct P123 Syntax |
-|-----------------|-------------------|
-| `High()`, `Volume()` | `Hi()`, `Vol()` |
-| `COGS()`, `SGA()` | `CostG()`, `SGandA()` |
-| `LTDebt()`, `TotDebt()` | `DbtLT()`, `DbtTot()` |
-| `OpCashFl()` | `OperCashFl()` |
-| `MACDHist()`, `MACDSig()` | `MACDD(short, long, period)` |
-| `PlusDI()`, `MinusDI()` | `DMIPlus()`, `DMIMinus()` |
-| `FHist()` returns average | `FHist()` = point-in-time; `FHistAvg()` = average |
-| `Aggregate(..., #Median)` | `FMedian()` (Aggregate only supports `#Avg`/`#CapAvg`) |
-| `FRank(..., #Asc, #NANeg)` | `FRank(..., #ASC, #InclNA)` |
-
----
+- Source of truth: the official Factor Reference (`doc_factors.jsp`, 2026-06-09 extraction),
+  the official `doc_detail.jsp` pages (850 full-detail pages parsed), the official OpenAPI
+  spec (verified identical to `api-docs.yml` served live), and the `p123api` wrapper source.
+- Category counts in every reference file header match the extraction report exactly.
+- A name-validation pass gates every file: all backticked identifiers must exist in the
+  extracted dictionary (wrong-side names are allowed only inside Common Mistakes tables).
+- Scripts compile and their happy paths were exercised live (read-only) before release.
+- Known gaps are documented inline: 14 Industry & Sector classification detail pages are
+  login-gated on P123's site (covered from dictionary data); the AI Factor per-call credit
+  cost is documented with both conflicting official sources.
 
 ## Contributing
 
-Contributions are welcome. If you find an incorrect function name, missing parameter, or outdated API behavior:
-
-1. Fork the repository
-2. Create a branch (`git checkout -b fix/function-name`)
-3. Verify your change against the [P123 Factor Browser](https://www.portfolio123.com/doc/doc_factors.jsp)
-4. Submit a pull request with a reference to the official documentation
-
----
-
-## Related Resources
-
-- [Portfolio123](https://www.portfolio123.com/) — The platform itself
-- [P123 API Swagger](https://api.portfolio123.com/docs/index.html) — REST API reference
-- [P123 Help Center](https://portfolio123.customerly.help/en) — Official documentation
-- [P123 Community Forum](https://community.portfolio123.com/) — Community discussions
-- [p123api on PyPI](https://pypi.org/project/p123api/) — Python wrapper package
-- [DataMiner Google Colab Examples](https://drive.google.com/drive/u/0/folders/1F3geOi2IYIbdb9obDj8U_o2aDTjw6Fpr) — Official notebook examples
-- [Agent Skills Standard](https://agentskills.io/) — The open standard this skill follows
-
----
-
-## Disclaimer
-
-This skill is an independent community project and is **not officially affiliated with or endorsed by Portfolio123, Inc.** Portfolio123 is a trademark of Portfolio123, Inc. The skill provides documentation references to assist AI coding agents; always verify formulas against the official P123 documentation.
-
----
+Issues and PRs welcome. Ground rule for content changes: every factor/function name must be
+verifiable against the official Factor Reference — PRs that add unverified names will be
+asked to include the verification evidence.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — copyright QuantSolvings.

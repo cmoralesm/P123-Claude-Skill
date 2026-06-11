@@ -1,231 +1,220 @@
 ---
 name: portfolio123
-description: >
-  Comprehensive skill for Portfolio123 (P123) — a systematic/quantitative equity research platform
-  used for factor investing, screening, ranking, backtesting, and portfolio management. Use this
-  skill whenever the user mentions Portfolio123, P123, p123api, factor investing formulas, stock
-  screening rules, ranking systems, DataMiner, P123 backtesting, P123 universe definitions, or any
-  P123 syntax like Close(0), MktCap, PEExclXorTTM, SetVar, FRank, FHist, NodeRank, Eval(),
-  screen rules, rank nodes, or P123 API calls. Also trigger when the user asks about writing P123
-  formulas, building ranking systems, constructing screens, retrieving data via the P123 API, or
-  replicating academic factor strategies (value, momentum, quality, low-volatility, BAB, etc.) on
-  the P123 platform. This skill covers the full P123 formula language (464+ functions, 4456+ factors),
-  the p123api Python wrapper, and best practices for systematic equity research.
+description: >-
+  Comprehensive, extraction-verified reference for Portfolio123 (P123), the systematic equity
+  research platform: factor investing, stock screening, ranking systems, backtesting, and the
+  REST API with the p123api Python wrapper. Use this skill whenever the user mentions
+  Portfolio123, P123, p123api, P123 screens or screen rules, ranking system XML, simulated
+  strategies, buy/sell rules, or any P123 formula syntax such as Close(0), FRank, FHist, MktCap,
+  PEExclXorTTM, ROE%TTM, SetVar, or Eval. Also use it when the user wants to write or debug P123
+  formulas, build or fix ranking systems, construct screens or universes, replicate academic
+  factor strategies (value, momentum, quality, low volatility) on P123, or pull P123 data
+  programmatically (screen_run, screen_backtest, rank_ranks, data_universe, AI Factor
+  predictions). Covers all 4,463 factors and 465 functions of the official Factor Reference in
+  13 category files, plus the full REST API (33 operations) and 9 runnable example scripts.
+license: MIT
 ---
 
-# Portfolio123 Skill
+<!-- name-whitelist: NAHandling P123_API_ID P123_API_KEY quotaRemaining asOfDt
+includeNodeDetails nodeDetails apiId Q PQ PYQ PTM A PY screen_run screen_backtest
+rank_ranks data_universe aifactor_predict to_pandas api_id api_key ClientException -->
+# Portfolio123 (P123)
 
-## Overview
+Portfolio123 is a web platform for systematic equity research: screening, multi-factor ranking
+systems, strategy simulation/backtesting, and a REST API. Its formula language (not Python) is
+used in screen rules, ranking-system nodes, buy/sell rules, and API data pulls.
 
-Portfolio123 (P123) is a web-based platform for systematic/quantitative equity research. It provides:
+Everything in this skill was extracted from the official P123 Factor Reference on 2026-06-09
+(4,463 factors and 465 functions across 13 categories, plus 473 constants/series-IDs/operators)
+and from the official OpenAPI spec and `p123api` wrapper source. **Never invent a factor or
+function name** — if a name is not in these reference files, assume it does not exist and look
+up the correct one.
 
-- **Screening**: Filter stocks using fundamental, technical, and estimate-based rules
-- **Ranking Systems**: Multi-factor ranking with composite nodes and weighted factors
-- **Backtesting**: Historical performance testing of screens and strategies
-- **DataMiner API**: Programmatic access via REST API and `p123api` Python wrapper
-- **Point-in-Time Data**: All data is evaluated as it was known at each historical date (survivorship-bias-free)
+## Which reference file to read
 
-## When to Read Which Reference File
+Read only what the task needs:
 
-This skill has 8 reference files. Read only what's needed for the task:
+| Task | Read |
+|---|---|
+| REST API or `p123api` Python calls (auth, screen_run, backtests, rank_ranks, data_universe, uploads, AI Factor) | [references/api.md](references/api.md) |
+| Valuation ratios (PE, EV/EBITDA, price-to-X), margins, growth rates, quality scores (Piotroski), financial-strength and per-share ratios | [references/ratios-statistics.md](references/ratios-statistics.md) |
+| Financial-statement line items (income statement, balance sheet, cash flow) and their factor variants; Compustat/FactSet vendor mapping | [references/financials.md](references/financials.md) |
+| Company metadata, prices/dividends/splits as fundamentals, share stats, insider/institutional ownership, short interest, actuals | [references/fundamentals.md](references/fundamentals.md) |
+| Analyst estimates: consensus EPS/sales (CurFY/NextFY/CurQ families), revisions, surprises, recommendations, long-term growth | [references/estimates.md](references/estimates.md) |
+| Price/volume indicators: SMA/EMA, RSI, MACD, ADX/DMI, Bollinger, returns (Ret%Chg), 52-week stats, volatility, beta | [references/technical.md](references/technical.md) |
+| Cross-sectional and time-series tools: FRank, FHist, FHistAvg, Aggregate, FMedian/FSum/FCount, Loop functions, linear regression, conditionals | [references/advanced-functions.md](references/advanced-functions.md) |
+| Simulated-strategy context: buy/sell rule factors (Rank, RankPos, portfolio state), rule patterns, rebalance idioms | [references/strategy.md](references/strategy.md) |
+| Universe-wide aggregates: UnivAvg, UnivCnt, UnivMedian, UnivSum, ... | [references/universe-operations.md](references/universe-operations.md) |
+| Universe definition filters: UnivExclude, UnivSubset, UnivRBICS | [references/universe-filters.md](references/universe-filters.md) |
+| Benchmark series access: BenchClose | [references/benchmark-functions.md](references/benchmark-functions.md) |
+| Sector/industry classification (RBICS): Sector, IndCode, SubIndustry, sector/industry composites | [references/industry-sector.md](references/industry-sector.md) |
+| ETF taxonomy vocabularies (ETF contexts): asset class, country, region, sector sets | [references/taxonomy.md](references/taxonomy.md) |
+| Math/set/date utilities, InList, GetSeries, macro series IDs (##CPI, FRED mappings), country and universe ID constants, operators | [references/misc.md](references/misc.md) |
+| **Generating or editing ranking-system XML** (mandatory read, see below) | [references/ranking-system-xml.md](references/ranking-system-xml.md) |
+| Running the bundled example scripts (setup, env vars, safety model) | [scripts/README.md](scripts/README.md) |
 
-| Task | Read This File |
-|------|---------------|
-| Writing P123 formulas (any kind) | `references/formula-quick-reference.md` |
-| Using financial statement data (balance sheet, income, cash flow) | `references/fundamental-data.md` |
-| Technical analysis (RSI, MACD, SMA, Bollinger, etc.) | `references/technical-functions.md` |
-| Advanced logic (SetVar, FHist, FRank, Eval, Aggregate, Loop, Regression) | `references/advanced-functions.md` |
-| Building or editing a ranking system XML | `references/ranking-system-xml.md` |
-| Macro data, FRED series, universe IDs, constants | `references/macros-constants.md` |
-| Python API calls (p123api wrapper) | `references/api-reference.md` |
-| AI Factor predictions (ML models) | `references/ai-factor-reference.md` |
+## Formula language essentials
 
-For ranking system XML tasks, ALWAYS read `ranking-system-xml.md` first — it contains
-the verified schema, correct tag names, known formula errors, and a working example.
-For most other tasks, start with `formula-quick-reference.md` + the relevant domain file.
+```p123
+// Variables: set once, reuse; @var:expr also displays the value in screen reports
+SetVar(@cheap, PEExclXorTTM < 15)
 
-## Key Concepts
+// Conditional: Eval(condition, value_if_true, value_if_false)
+Eval(PEExclXorTTM = NA, Pr2SalesTTM < 2, PEExclXorTTM < 20)
 
-### Formula Language Basics
+// NA handling: IsNA(expr1, expr2) is a REPLACEMENT function (returns expr2 when
+// expr1 is NA). It is NOT a one-argument boolean test - test NA with "= NA".
+IsNA(DivPSTTM, 0)           // dividend per share, 0 when missing
+LastSellPrice = NA          // boolean: never sold before
 
-P123 uses its own formula language (not Python) for screens, rankings, and data retrieval:
+// Cross-sectional percentile rank (0-100). Defaults: scope #All, sort #DESC, NAs #InclNA
+FRank("PEExclXorTTM", #All, #ASC) > 80   // #ASC: low PE ranks high
 
-```
-// Variables
-SetVar(@myPE, PEExclXorTTM)
-@myPE < 20
-
-// Conditional logic
-Eval(IsNA(PEExclXorTTM), Pr2SalesTTM < 2, PEExclXorTTM < 20)
-
-// Cross-sectional ranking (#ASC = lower is better)
-FRank("PEExclXorTTM", #All, #ASC) > 80
-
-// Historical point-in-time value (52 weeks ago)
+// Point-in-time history: value of a formula N weeks ago / averaged samples
 FHist("ROE%TTM", 52)
-
-// Historical average (4 samples, 13 weeks apart)
 FHistAvg("ROE%TTM", 4, 13)
 
-// Technical with price series
+// Technical: bars are trading days; constants #Year, #Month, #Week are bar counts
 Close(0) > SMA(200, 0)
 RSI(14) < 30
+Ret%Chg(252, 21)            // total return over 252 bars, ending 21 bars ago
+
+// Scope aggregates and counterparts
+Aggregate("Pr2SalesTTM", #Industry)      // methods: #Avg (default), #CapAvg
+FMedian("Pr2SalesTTM", #Industry)        // median; also FSum, FCount
+UnivCnt("PEExclXorTTM < 10")             // universe-wide count
+
+// Macro/index series in price functions via series IDs
+Close(0, ##CPI)
+Close(0, GetSeries("$SP500"))
 ```
 
-### Fundamental Data Pattern
+**Line-item pattern (Financials).** Every statement line item is one function plus prebuilt
+factor variants: `Sales(offset, type[, NAHandling])` with `type` = `QTR`/`ANN`/`TTM` and
+`NAHandling` = `FALLBACK` (default), `KEEPNA`, `ZERONA`; prebuilt variants append period
+suffixes to the same base — `SalesQ`, `SalesPQ`, `SalesPYQ`, `SalesTTM`, `SalesPTM`, `SalesA`,
+`SalesPY`, growth `SalesGr%TTM`/`SalesGr%A`, per-share `SalesPSQ`, averages `Sales5YAvg`,
+regressions `SalesRegGr%TTM`. The same suffix system drives most of the 4,463 factors — see
+[references/financials.md](references/financials.md).
 
-Every financial line item follows a consistent pattern:
+**Screens vs rankings.** Screen rules are boolean tests evaluated per stock. Ranking systems
+combine weighted factor nodes into a 0–100 rank; in a ranking node, "lower is better" controls
+direction (e.g. PE), while in `FRank` the equivalent is the `#ASC` sort argument.
 
-- **Function**: `ItemName(offset, periodType[, NAHandling])`
-  - offset: 0=most recent, 1=previous, etc.
-  - periodType: `QTR`, `ANN`, `TTM`
-  - NAHandling: `FALLBACK` (default), `KEEPNA`, `ZERONA`
+## Critical: do not hallucinate names
 
-- **Pre-built Factors** (no parentheses needed):
-  - Period: `ItemNameQ`, `ItemNameA`, `ItemNameTTM`, `ItemNamePQ`, `ItemNamePY`
-  - Growth: `ItemNameGr%TTM`, `ItemNameGr%A`, `ItemNameGr%PYQ`, `ItemNameGr%PQ`
-  - Per Share: `ItemNamePSA`, `ItemNamePSQ`
-  - Ratios: `ItemName%AssetsA`, `ItemName%SalesQ`
-  - Regression: `ItemNameRegGr%ANN`, `ItemNameRSD%TTM`
-  - Average: `ItemName3YAvg`, `ItemName5YAvg`
+The single most common failure mode is inventing plausible-looking factor names. Top
+cross-category traps (every "correct" name verified against the extraction dictionary;
+per-category tables live in each reference file's Common Mistakes section):
 
-### Critical Function Name Differences
+| Wrong (do not use) | Correct | Note |
+|---|---|---|
+| `IsNA(x)` as boolean | `x = NA` | `IsNA(expr1, expr2)` is two-argument replacement |
+| `Eval(IsNA(x), a, b)` | `Eval(x = NA, a, b)` | same trap inside Eval |
+| `PiotroskiF` | `PiotFScore` | Piotroski F-Score |
+| `EstEPSCY` / `EstEPSCQ` | `CurFYEPSMean` / `CurQEPSMean` | legacy Est... estimate family does not exist |
+| `Revenue` | `Sales` | revenue line item |
+| `NetIncome` | `NetIncBXor` | net income before extraordinaries |
+| `TotalAssets` | `AstTot` | total assets |
+| `FreeCashFlow` | `FCF` | free cash flow |
+| `MarketCap` | `MktCap` | market capitalization |
+| `EnterpriseVal` | `EV` | enterprise value (per-share: `EVPS`) |
+| `GrossMargin` | `GMgn%` | gross margin (e.g. `GMgn%TTM`) |
+| `CurrentRatio` | `CurRatio` | current ratio |
+| `DivYield%TTM` | `Yield` | dividend yield takes no period suffix |
+| `EarnYield%TTM` | `EarnYield` | yields are current-price figures, no suffix |
+| `PEG` | `PEGLT` / `PEGST` | PEG ratio variants |
+| `AltmanZ` | `AltmanZOrig` | also `AltmanZPriv`, `AltmanZNonManu` |
+| `LatestRank` | `Rank` | current rank in buy/sell rules |
+| `SectorCount` | `SecCount` | sector position count |
+| `UnivCount` | `UnivCnt` | universe count |
+| `BenchmarkClose` | `BenchClose` | benchmark close |
+| `Average` / `Power` / `Ln` | `Avg` / `Pow` / `LN` | math function spellings |
+| `PlusDI` / `MinusDI` | `DMIPlus` / `DMIMinus` | directional indicators |
+| `IndustryCode` | `IndCode` | classification factor |
 
-P123 uses its own naming conventions that differ from common financial terminology:
+When unsure about any name, grep the relevant reference file before writing it.
 
-| Common Name | P123 Function Name |
-|-------------|-------------------|
-| High price | `Hi()` (not `High()`) |
-| Volume | `Vol()` (not `Volume()`) |
-| Cost of Goods Sold | `CostG()` (not `COGS()`) |
-| Gross Profit | `GrossProfit()` (not `GrProfit()`) |
-| SG&A | `SGandA()` (not `SGA()`) |
-| Pre-tax Income | `IncBTax()` (not `PreTaxInc()`) |
-| Income Tax | `IncTaxExp()` (not `IncomeTax()`) |
-| Operating Cash Flow | `OperCashFl()` (not `OpCashFl()`) |
-| Long-term Debt | `DbtLT()` (not `LTDebt()`) |
-| Total Debt | `DbtTot()` (not `TotDebt()`) |
-| Shares Outstanding | `Shares()` (not `ShOut()`) |
-| Shares Diluted | `SharesFD()` (not `ShOutDil()`) |
-| EPS (basic) | `EPSExclXor()` (not `EPS()`) |
-| Dividends per Share | `DivPS()` (not `DPS()`) |
-| FFO (REITs) | `FundsFromOp()` (not `FFO()`) |
-| Stock Compensation | `StkOptExp()` (not `StockComp()`) |
-| Preferred Dividends | `PfdDiv()` (not `PrefDiv()`) |
-| Deferred Tax + IC | `TxDfdIC()` (not `DefTaxInvCr()`) |
-| DMI+ | `DMIPlus()` (not `PlusDI()`) |
-| DMI− | `DMIMinus()` (not `MinusDI()`) |
-| Gross Margin | `GMgn%TTM` (not `GrMgn%TTM`) |
-| Net Profit Margin | `NPMgn%TTM` (not `NetMgn%TTM`) |
-| Debt/Equity | `DbtTot2EqQ` (not `DebtToEqQ`) |
+## Ranking-system XML: always read the reference first
 
-### Ranking System Structure (XML)
+**ALWAYS read [references/ranking-system-xml.md](references/ranking-system-xml.md) before
+generating or editing any ranking-system XML.** The correct schema is NOT guessable, and
+earlier versions of this skill shipped a broken one. That file contains the validated schema,
+RankType direction guidance, a worked Penman & Pope example, and a known-formula-errors table.
 
-Ranking systems use XML in the text editor. The correct schema uses `<Composite>`,
-`<StockFactor>`, and `<StockFormula>` tags. **Always read `references/ranking-system-xml.md`
-before writing any ranking system XML** — it contains the verified schema, correct
-pre-built factor names, and known errors to avoid.
+## API quick start
 
-Minimal correct example:
-
-```xml
-<RankingSystem RankType="Higher">
-  <Composite Name="Value" Weight="50" RankType="Higher">
-    <StockFactor Weight="50" RankType="Lower" Scope="Industry">
-      <Factor>PEExclXorTTM</Factor>
-    </StockFactor>
-    <StockFormula Weight="50" RankType="Higher" Name="EBITDA to EV" Description="" Scope="Universe">
-      <Formula>OpIncBDeprTTM/EV</Formula>
-    </StockFormula>
-  </Composite>
-  <Composite Name="Quality" Weight="50" RankType="Higher">
-    <StockFactor Weight="100" RankType="Higher" Scope="Industry">
-      <Factor>ROI%TTM</Factor>
-    </StockFactor>
-  </Composite>
-</RankingSystem>
-```
-
-### Common Factor Investing Strategies on P123
-
-**Value**: PEExclXorTTM, Pr2BookQ, Pr2SalesTTM, Pr2FrCashFlTTM, EV2EBITDATTM
-**Momentum**: Ret%Chg(252, 21), Pr52W%Chg, Pr52WRel%Chg, RSI(14)
-**Quality**: ROE%TTM, ROA%TTM, GMgn%TTM, OpMgn%TTM, PiotFScore
-**Low Volatility**: PctDev(52, 5), BetaFunc(52, 104), StdDev(252)
-**Size**: MktCap, Close(0)
-**Growth**: SalesGr%TTM, EBITDAGr%TTM, ConsEstMean(#EPS, #NY) / ConsEstMean(#EPS, #CY) - 1
-
-## Quick Start Examples
-
-### Screen Rule: Cheap, Profitable, Momentum
-
-```
-// Universe filter
-MktCap > 500
-AvgDailyTot(63) > 500
-
-// Value
-PEExclXorTTM < 20
-
-// Quality
-ROE%TTM > 15
-
-// Momentum (12-1 month)
-Ret%Chg(252, 21) > 0
-```
-
-### API: Run a Screen
+Credentials come from P123 Account Settings → API (paying subscription required). The bundled
+scripts read them from the `P123_API_ID` / `P123_API_KEY` environment variables.
 
 ```python
 import p123api
 
-client = p123api.Client(api_id='YOUR_ID', api_key='YOUR_KEY')
-result = client.screen_run({
-    'screen': {
-        'type': 'stock',
-        'universe': 'SP500',
-        'maxNumHoldings': 25,
-        'method': 'long',
-        'ranking': {'formula': 'PEExclXorTTM', 'lowerIsBetter': True},
-        'rules': [
-            {'formula': 'MktCap > 1000', 'type': 'long'},
-            {'formula': 'ROE%TTM > 10', 'type': 'long'}
-        ]
-    },
-    'asOfDt': '2025-01-01'
-}, True)  # True = Pandas DataFrame
+with p123api.Client(api_id='your api id', api_key='your api key') as client:
+    try:
+        # Screen by definition. Long-only screens: rules are plain formulas -
+        # do NOT add a per-rule 'type' (it is rejected for method 'long').
+        df = client.screen_run({
+            'screen': {
+                'type': 'stock',
+                'universe': 'SP500',
+                'method': 'long',
+                'maxNumHoldings': 25,
+                'ranking': {'formula': 'PEExclXorTTM', 'lowerIsBetter': True},
+                'rules': [
+                    {'formula': 'MktCap > 1000'},
+                    {'formula': 'ROE%TTM > 10'},
+                ],
+            },
+            'asOfDt': '2026-01-05',
+        }, to_pandas=True)
+
+        # Bulk factor download for research/ML
+        df2 = client.data_universe({
+            'universe': 'SP500',
+            'asOfDts': ['2026-01-05'],
+            'formulas': ['PEExclXorTTM', 'ROE%TTM', 'MktCap', 'Ret%Chg(252, 21)'],
+            'includeNames': True,
+            'precision': 4,
+        }, to_pandas=True)
+    except p123api.ClientException as e:
+        print(e)
 ```
 
-### API: Retrieve Factor Data for ML
+Responses carry `cost` and `quotaRemaining` — track them; see api.md → Quotas & Costs.
+For endpoint-by-endpoint docs, the 38-method wrapper map, AI Factor usage (historical `asOfDt`
+must be a Saturday), and known pitfalls (deprecated `includeNodeDetails` → `nodeDetails`,
+upload payloads via `data=`, the per-rule `type` bug), read
+[references/api.md](references/api.md).
 
-```python
-result = client.data_universe({
-    'universe': 'SP500',
-    'asOfDts': ['2025-03-08'],
-    'formulas': ['PEExclXorTTM', 'ROE%TTM', 'MktCap', 'Ret%Chg(252)'],
-    'names': ['PE', 'ROE', 'MktCap', 'Mom12M'],
-    'precision': 4,
-    'includeNames': True
-}, to_pandas=True)
-```
+## Runnable examples
 
-## Important Notes
+`scripts/` contains 9 CLI examples built on `p123_helpers.py` (install: `pip install p123api`).
+All are read-only except `09_strategy_rebalance_dryrun.py`, which only mutates with an explicit
+`--execute` flag plus typed confirmation. Start with `01_auth_check.py`, then
+`02_screen_run.py`, `07_price_history.py` (works on the free trial: IBM/MSFT/INTC, 5y history).
+Full table and safety model: [scripts/README.md](scripts/README.md).
 
-- All P123 formulas are **point-in-time** — they evaluate using only data available on the as-of date
-- `NA` handling is critical: use `FALLBACK` (fills from prior period), `KEEPNA`, or `ZERONA`
-- Screen rules are **AND** conditions (all must be true); use `OR` keyword for disjunction
-- In ranking systems, `RankType="Lower"` means lower values get higher ranks (e.g., PE ratio). See `ranking-system-xml.md`
-- The API uses credits: `data` = 1 per 100K points, `screen_run` = 2, `screen_backtest` = 5
-- Weekend dates should be used for `asOfDts` in `data_universe()` calls
-- Bars = trading days (~251/year, ~21/month, ~5/week); use `#Year`, `#Month`, `#Week` constants
-- FRank sort params are `#ASC` / `#DESC` (uppercase); NA params are `#InclNA`, `#ExclNA`, `#NANeutral`
-- Aggregate only supports `#Avg` and `#CapAvg` as methods; use `FMedian()`, `FSum()`, `FCount()` for other stats
-- `FHist()` returns a single point-in-time value; `FHistAvg()` returns the average of multiple samples
+## Verified factor starting points by style
 
-## Resources
+| Style | Verified factors/functions |
+|---|---|
+| Value | `PEExclXorTTM`, `Pr2BookQ`, `Pr2SalesTTM`, `Pr2FrCashFlTTM`, `EV2EBITDATTM`, `EarnYield`, `FCFYield` |
+| Momentum | `Ret%Chg(252, 21)`, `Pr52W%Chg`, `Pr52WRel%Chg`, `RSI(14)` |
+| Quality | `ROE%TTM`, `ROA%TTM`, `GMgn%TTM`, `OpMgn%TTM`, `PiotFScore` |
+| Low volatility | `PctDev(52, 5)`, `BetaFunc(52, 104)` |
+| Size / liquidity | `MktCap`, `AvgDailyTot(63)` |
+| Growth | `SalesGr%TTM`, `EBITDAGr%TTM`, `CurFYEPSMean` vs `NextFYEPSMean` trends |
 
-- API Swagger: https://api.portfolio123.com/docs/index.html
-- Help Center: https://portfolio123.customerly.help/en
-- Community Forum: https://community.portfolio123.com/
-- p123api PyPI: https://pypi.org/project/p123api/
-- DataMiner Examples (Google Colab): https://drive.google.com/drive/u/0/folders/1F3geOi2IYIbdb9obDj8U_o2aDTjw6Fpr
+## Working rules for this skill
+
+1. Verify every factor/function name in the reference files before using it; never extrapolate
+   from one name family to another (suffix rules differ by family).
+2. Read ranking-system-xml.md before any ranking XML work — no exceptions.
+3. For API parameter names, api.md reflects the wrapper source where the spec disagrees
+   (e.g. pass `api_id`/`api_key` as strings even though the spec types `apiId` as integer).
+4. Period suffixes: `Q`, `PQ`, `PYQ`, `TTM`, `PTM`, `A`, `PY` are the core family; growth and
+   statistical suffixes (`Gr%...`, `RSD%...`, `RegEst...`, `...3YAvg`) exist only where a
+   category file lists them.
+5. Mutating API operations (rebalance commits, uploads, deletes) require explicit user intent;
+   default to dry runs (see scripts/README.md safety model).
