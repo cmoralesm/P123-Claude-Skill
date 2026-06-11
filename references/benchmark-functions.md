@@ -1,14 +1,14 @@
-# Benchmark Functions — Portfolio123 Reference
+# Benchmark Functions - Portfolio123 Reference
 
 Benchmark Functions return historical price data for the benchmark assigned to
 the current screen, simulation, or portfolio. For stock-level price history
 (`Close`, `Open`, and the other price functions) see [technical.md](technical.md);
 for the `#Bench` time series ID used in series-aware functions see [misc.md](misc.md).
 
-Coverage: 1 function / 0 factors — extracted from the official Factor Reference
+Coverage: 1 function / 0 factors - extracted from the official Factor Reference
 on 2026-06-09. This function has no individual detail page in the official
 documentation (`doc_index.jsp`), so the entry below is built from the dictionary
-fields (code, signature, description) only — no Parameters or Examples sections
+fields (code, signature, description) only - no Parameters or Examples sections
 are invented.
 
 ## Benchmark Close
@@ -35,5 +35,5 @@ BenchClose(10)
 
 ## See Also
 
-- [technical.md](technical.md) — stock-level price functions such as `Close` and `Open`.
-- [misc.md](misc.md) — the `#Bench` benchmark time series ID for series-aware functions.
+- [technical.md](technical.md) - stock-level price functions such as `Close` and `Open`.
+- [misc.md](misc.md) - the `#Bench` benchmark time series ID for series-aware functions.

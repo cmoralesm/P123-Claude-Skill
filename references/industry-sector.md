@@ -1,13 +1,13 @@
-# Industry & Sector — Portfolio123 Reference
+# Industry & Sector - Portfolio123 Reference
 
 Industry & Sector covers stock classification under the Revere Industry
-Classification (RBICS) hierarchy — sector, sub-sector, industry, and
-sub-industry — plus a large set of industry-aggregate factors that report a
+Classification (RBICS) hierarchy - sector, sub-sector, industry, and
+sub-industry - plus a large set of industry-aggregate factors that report a
 ratio or growth rate averaged across the stock's industry. For ETF
 classification vocabularies see [taxonomy.md](taxonomy.md); to restrict a
 universe to specific RBICS codes see [universe-filters.md](universe-filters.md).
 
-Coverage: 1 function / 91 factors — extracted from the official Factor Reference
+Coverage: 1 function / 91 factors - extracted from the official Factor Reference
 on 2026-06-09. The Classification factors' full code lists live on detail pages
 that require a Portfolio123 subscription to view (see
 `build/data/details-skipped.json`), so those factors are documented from the
@@ -217,6 +217,6 @@ sub-group.
 
 ## See Also
 
-- [taxonomy.md](taxonomy.md) — ETF classification vocabularies (asset class, region, sector, ...).
-- [universe-filters.md](universe-filters.md) — `UnivRBICS` to restrict a universe to RBICS codes.
-- [ratios-statistics.md](ratios-statistics.md) — the per-stock counterparts of the industry-aggregate ratios.
+- [taxonomy.md](taxonomy.md) - ETF classification vocabularies (asset class, region, sector, ...).
+- [universe-filters.md](universe-filters.md) - `UnivRBICS` to restrict a universe to RBICS codes.
+- [ratios-statistics.md](ratios-statistics.md) - the per-stock counterparts of the industry-aggregate ratios.

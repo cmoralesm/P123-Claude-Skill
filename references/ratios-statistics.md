@@ -1,10 +1,10 @@
-# Ratios & Statistics — Portfolio123 Reference
+# Ratios & Statistics - Portfolio123 Reference
 
 <!-- name-whitelist: NAHandling -->
 
 Computed ratios, valuation multiples, margins, per-share figures, efficiency and financial-strength statistics, and the advanced scoring models (Altman Z, Beneish M, Piotroski F). Raw filing line items live in [Financials](financials.md); the underlying formula language and operators are in [Technical](technical.md) and [Advanced Functions](advanced-functions.md). Analyst-estimate ratios are in [Estimates](estimates.md).
 
-Coverage: **60 functions / 1,206 factors** — extracted from the official Factor Reference on 2026-06-09.
+Coverage: **60 functions / 1,206 factors** - extracted from the official Factor Reference on 2026-06-09.
 
 ## Line-item function conventions
 
@@ -14,7 +14,7 @@ Most ratio functions in this category share the same calling convention. Unless 
 |---|---|
 | `offset` | Period offset: `0` is the most recent period, `1` the previous one, and so on (0-24 for interim, 0-19 for annual). |
 | `type` | `QTR` (quarterly), `ANN` (annual), or `TTM` (trailing twelve months). For income and cash-flow values, TTM sums four quarters; for balance-sheet values, TTM averages the trailing four quarters. |
-| `NAHandling` | Optional, controls preliminary-report N/A handling for the most recent period: `FALLBACK` (default — fall back to the prior period), `KEEPNA`, or `ZERONA`. |
+| `NAHandling` | Optional, controls preliminary-report N/A handling for the most recent period: `FALLBACK` (default - fall back to the prior period), `KEEPNA`, or `ZERONA`. |
 
 Each function also has prebuilt factor variants (a base code plus a period suffix such as Q, PQ, TTM, A, or PY); those are listed in the factor tables under each subcategory. Quarterly values from income and cash-flow statements are annualized so they compare with 12-month figures.
 
@@ -3274,7 +3274,7 @@ AltmanZ Factors
 
 ## See Also
 
-- [Financials](financials.md) — raw filing line items the ratios are built from.
-- [Estimates](estimates.md) — analyst-estimate consensus ratios and surprises.
-- [Technical](technical.md) — price/volume functions and the formula language.
-- [Advanced Functions](advanced-functions.md) — looping, regression, and helper operators.
+- [Financials](financials.md) - raw filing line items the ratios are built from.
+- [Estimates](estimates.md) - analyst-estimate consensus ratios and surprises.
+- [Technical](technical.md) - price/volume functions and the formula language.
+- [Advanced Functions](advanced-functions.md) - looping, regression, and helper operators.

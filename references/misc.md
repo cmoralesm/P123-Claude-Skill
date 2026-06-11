@@ -1,4 +1,4 @@
-# Misc — Portfolio123 Reference
+# Misc - Portfolio123 Reference
 
 <!-- name-whitelist: RTWEXBGS -->
 
@@ -9,7 +9,7 @@ functions, and the constant vocabularies (numerical constants, country IDs,
 universe IDs, parameter enumerations) and operators used throughout the formula
 language.
 
-Coverage: 43 functions / 20 factors (official totals) — extracted from the
+Coverage: 43 functions / 20 factors (official totals) - extracted from the
 official Factor Reference on 2026-06-09. In addition, 473 entries are
 documented here that the official factor totals do not count: time-series and
 macro series IDs, numerical and enumeration constants, country and universe IDs,
@@ -35,7 +35,7 @@ factors.
 
 ## Series IDs (overview)
 
-Series IDs are used in functions that take a `series` parameter — for example
+Series IDs are used in functions that take a `series` parameter - for example
 `Close(0, ##CPI)` returns the latest CPI value, and
 `%(Close(0, ##CPI), Close(12, ##CPI))` computes the year-over-year change (CPI is
 monthly, so an offset of 12 is one year). The `$`-prefixed IDs are index tickers,
@@ -1033,8 +1033,8 @@ not counted as functions or factors.
 
 ### Boolean operators
 
-- `And` — `Expr1 And Expr2` evaluates to 1 when both Expr1 and Expr2 are non-zero.
-- `Or` — `Expr1 Or Expr2` evaluates to 1 when one or both expressions are non-zero.
+- `And` - `Expr1 And Expr2` evaluates to 1 when both Expr1 and Expr2 are non-zero.
+- `Or` - `Expr1 Or Expr2` evaluates to 1 when one or both expressions are non-zero.
 
 ### Logical operators
 
@@ -1093,7 +1093,7 @@ was a duplicated row that does not match the series meaning, so the FRED ID for
 
 ## See Also
 
-- [universe-operations.md](universe-operations.md) — universe-wide aggregation (the counterpart to the Set functions).
-- [universe-filters.md](universe-filters.md) — universe filtering by ticker / RBICS, and the universe IDs listed here.
-- [technical.md](technical.md) — `Close`, `Open`, and other price functions that accept the series IDs above.
-- [advanced-functions.md](advanced-functions.md) — `FRank`, `Aggregate`, and other higher-order functions.
+- [universe-operations.md](universe-operations.md) - universe-wide aggregation (the counterpart to the Set functions).
+- [universe-filters.md](universe-filters.md) - universe filtering by ticker / RBICS, and the universe IDs listed here.
+- [technical.md](technical.md) - `Close`, `Open`, and other price functions that accept the series IDs above.
+- [advanced-functions.md](advanced-functions.md) - `FRank`, `Aggregate`, and other higher-order functions.

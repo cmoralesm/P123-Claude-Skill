@@ -1,4 +1,4 @@
-# Technical — Portfolio123 Reference
+# Technical - Portfolio123 Reference
 
 Technical functions and factors operate on price and volume bar data (trading days by default).
 This file covers price (OHLCV), returns and performance, volume and liquidity, moving averages,
@@ -9,7 +9,7 @@ position state used in buy/sell rules (`PctFromHi`, `GainPct`, `NoBars`) see
 [Strategy](strategy.md). Date and set utilities such as `BarsSince`, `StdDev`, and `GetSeries`
 live in [Misc](misc.md).
 
-Coverage line: 95 functions / 55 factors — extracted from the official Factor Reference on
+Coverage line: 95 functions / 55 factors - extracted from the official Factor Reference on
 2026-06-09. Official subcategories: Performance; Price; Volume; Moving Average; Accumulation;
 Trending; Pattern; Oscillators; Volatility.
 
@@ -34,8 +34,8 @@ Trending; Pattern; Oscillators; Volatility.
 
 Most technical functions share these optional parameters:
 
-- **offset** — bars ago to start the calculation (0 = from the latest bar).
-- **series** — the price series to use. By default a function reads the time series of the
+- **offset** - bars ago to start the calculation (0 = from the latest bar).
+- **series** - the price series to use. By default a function reads the time series of the
   instrument in context. You can pass `#Bench` (benchmark), `#Industry` or `#Sector` (index
   prices), `#Equity` (portfolio value, strategies only), a numeric P123 stock ID, or a series
   obtained with `GetSeries("ticker")`.
@@ -754,7 +754,7 @@ Annualized standard deviation of total return.
 
 ## See Also
 
-- [Advanced Functions](advanced-functions.md) — `FRank`, `ZScore`, loop and regression functions.
-- [Strategy](strategy.md) — position and portfolio state for buy/sell rules.
-- [Misc](misc.md) — set statistics (`StdDev`, `RelStdDev`), date utilities, and `GetSeries`.
-- [Ranking System XML](ranking-system-xml.md) — using technical formulas inside ranking nodes.
+- [Advanced Functions](advanced-functions.md) - `FRank`, `ZScore`, loop and regression functions.
+- [Strategy](strategy.md) - position and portfolio state for buy/sell rules.
+- [Misc](misc.md) - set statistics (`StdDev`, `RelStdDev`), date utilities, and `GetSeries`.
+- [Ranking System XML](ranking-system-xml.md) - using technical formulas inside ranking nodes.

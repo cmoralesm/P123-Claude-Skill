@@ -12,7 +12,7 @@ Claude Code: update this file after completing each phase/gate (see ../PLAN.md).
 | 5 | SKILL.md + README + CHANGELOG + evals + Gate 4 validation | **PASS** (2026-06-10) | See "Phase 5" section below |
 | 6 | Packaging + Gate 5 independent verification | **PASS** (2026-06-10) | Round 2 clean; packaged + install-tested |
 
-## Gate 5 — Verification round 1 (2026-06-10)
+## Gate 5 - Verification round 1 (2026-06-10)
 
 Verifier V (fresh adversarial agent) report: `VERIFICATION-REPORT.md` (folder root). All
 sources re-verified live (S5 MD5 match), 26-entry sample clean with 10 live confirmations,
@@ -21,7 +21,7 @@ independent name-sweep clean, scripts compile and are safety-gated. Findings and
 | ID | Severity | Finding | Fix (2026-06-10) |
 |---|---|---|---|
 | BLK-1 | Blocker | `v3/.env` (credentials) would ship inside `portfolio123.skill` (packager has no `.env` exclusion) | `.env` moved out of `v3/` to the folder root; packaging will also stage a copy that never contains it |
-| MAJ-1 | Major | `#Previous1`/`#GroupVar2` shipped as "verified scope constants" — PR #3 misparse of live-page footnote superscripts | Scope table rewritten with the 16 official constants verbatim from the dictionary; footnote restrictions kept as labeled official footnotes; whitelist entries removed |
+| MAJ-1 | Major | `#Previous1`/`#GroupVar2` shipped as "verified scope constants" - PR #3 misparse of live-page footnote superscripts | Scope table rewritten with the 16 official constants verbatim from the dictionary; footnote restrictions kept as labeled official footnotes; whitelist entries removed |
 | MAJ-2 | Major | evals.json eval 4 expected a nonexistent `RankingSystem2` root, contradicting ranking-system-xml.md | Eval 4 rewritten to the validated schema (RankingSystem root, StockFormula/Composite, RankType Lower/Higher) |
 | MIN-1 | Minor | Unsourced "formula names are case-insensitive" claim (strategy.md) | Claim removed; canonical-casing guidance kept |
 | MIN-2 | Minor | PR #4 behavior semantics shipped with disclosed provenance but no artifact source | Accepted as-is (provenance disclosed in strategy.md); flagged for owner review |
@@ -34,24 +34,24 @@ independent name-sweep clean, scripts compile and are safety-gated. Findings and
 Post-fix re-checks: `check_names.py` clean on all changed files + SKILL.md; evals.json valid
 (12 evals); Gate 2 re-run: PASS. Verification round 2 (fresh verifier, changed scope) launched.
 
-## Gate 5 — Verification round 2 + packaging (2026-06-10)
+## Gate 5 - Verification round 2 + packaging (2026-06-10)
 
 - **Round 2: PASS, zero blockers/majors remaining, zero new findings** (fresh verifier;
-  results appended to `VERIFICATION-REPORT.md` → "Round 2 — changed-scope re-verification").
+  results appended to `VERIFICATION-REPORT.md` → "Round 2 - changed-scope re-verification").
   BLK-1/MAJ-1/MAJ-2 confirmed fixed with programmatic evidence (16-constant exact set match;
   eval-4 expectations traced to ranking-system-xml.md lines; no .env in v3/).
 - **Packaging (plan/06 §7):** `v3/` staged as `build/stage/portfolio123/` (folder name drives
-  the package name — the packager uses the directory name, not the frontmatter) and packaged
+  the package name - the packager uses the directory name, not the frontmatter) and packaged
   with the official skill-creator tool → `portfolio123.skill` (184,679 B, replaces the stale
   v1 package at the folder root). Zip audit: 32 entries, single top-level `portfolio123/`
   dir, **no .env**, no evals/ (auto-excluded), no __pycache__.
 - **Install test:** unzipped to a temp dir; `quick_validate.py` → "Skill is valid!"; all 16
   SKILL.md link targets (15 references + scripts/README.md) resolve in the unpacked tree.
 - `p123_skill.zip` (broken internal layout, superseded) deleted per decision R5.5.
-- Note: `v3/.env` was relocated to the folder root (outside the repo tree) — the owner's
+- Note: `v3/.env` was relocated to the folder root (outside the repo tree) - the owner's
   API credentials never ship in the package or the repo.
 
-## Release checklist (owner actions — decision R5.3)
+## Release checklist (owner actions - decision R5.3)
 
 - [ ] Review `VERIFICATION-REPORT.md` (rounds 1 + 2) and this file.
 - [ ] Owner sign-off on the two accepted deviations: MIN-2 (PR #4 behavior semantics shipped
@@ -66,17 +66,17 @@ Post-fix re-checks: `check_names.py` clean on all changed files + SKILL.md; eval
       `claude-skill`, `portfolio123`, `factor-investing`, `quantitative-finance`).
 - [ ] Close PRs #3/#4/#6 and issue #5 with thanks + release link (their verified content is
       incorporated and credited in CHANGELOG.md §Credits).
-- [ ] Verify README install instructions against the final repo tree (no placeholders —
+- [ ] Verify README install instructions against the final repo tree (no placeholders -
       verified in round 1/2, re-check after the repo copy).
-- [ ] Optional: announcement (P123 forum / LinkedIn) — outside this plan's scope.
+- [ ] Optional: announcement (P123 forum / LinkedIn) - outside this plan's scope.
 
-## Phase 5 — Skill assembly + Gate 4 (2026-06-10)
+## Phase 5 - Skill assembly + Gate 4 (2026-06-10)
 
 - `v3/SKILL.md` rewritten: frontmatter `name: portfolio123`, description 992 chars (limit
   1,024), no angle brackets, no DataMiner; body 205 lines (limit 500); routing table covers
   all 15 reference files + scripts/README.md; formula essentials with only
   dictionary-verified names (every name and signature checked against
-  `dictionary-by-code.json` before inclusion — `DivPSA` was caught as nonexistent and
+  `dictionary-by-code.json` before inclusion - `DivPSA` was caught as nonexistent and
   replaced with `DivPSTTM`); 23-row cross-category Common Mistakes table; ranking-XML
   always-read rule; API quick start with the PR-#6-correct payload (no per-rule `type`);
   `check_names.py` exit 0 (120 candidates).
@@ -88,12 +88,12 @@ Post-fix re-checks: `check_names.py` clean on all changed files + SKILL.md; eval
   DataMiner = v3.1 candidate); v2/v1 history stubs.
 - `v3/evals/evals.json`: 12 evals per plan/06 Gate 4 list, each with prompt,
   expected_output, and 3-4 objective expectations.
-- **Gate 4: PASS** — official `quick_validate.py` (skill-creator tooling, copied to
+- **Gate 4: PASS** - official `quick_validate.py` (skill-creator tooling, copied to
   `build/tools/scripts/` from the plugin install; the S9 path `~/.claude/skills/` does not
-  exist on this machine — substitution logged): "Skill is valid!"; evals schema-complete;
+  exist on this machine - substitution logged): "Skill is valid!"; evals schema-complete;
   DataMiner absent; routing complete.
 
-## Phase 0 — Extraction pipeline (run 2026-06-09)
+## Phase 0 - Extraction pipeline (run 2026-06-09)
 
 - Pipeline scripts written and run: `build/extract_factors.py`, `extract_details.py`,
   `extract_line_items.py`, `validate_extraction.py`, `make_slices.py`, `fetch_inputs.py`;
@@ -111,35 +111,35 @@ Post-fix re-checks: `check_names.py` clean on all changed files + SKILL.md; eval
   - `_vdfs` field 1 is either `'()'` (function marker) or a factor **suffix** concatenated to
     field 0 to form the full code (e.g. `EV2EBITDA`+`Q`). Full codes are the dictionary keys.
   - 473 entries live under tree nodes whose anchors report 0/0 (constants, Country IDs,
-    Universe IDs, Time/Macro Series IDs, operators — all under Misc). They are NOT counted in
+    Universe IDs, Time/Macro Series IDs, operators - all under Misc). They are NOT counted in
     the official 465/4,463 totals; marked `counted: false` in artifacts. 5,401 = 4,928 + 473.
   - 14 detail pages are login-gated ("An active subscription is required..."): the
     Industry & Sector classification factors (IndCode, Industry, RBICS, Sector, SubSector,
     UnivRBICS, ...). Listed in `build/data/details-skipped.json`; these ship as
     dictionary-sourced rows only. Success rate is computed over the 850 accessible pages.
   - doc_index.jsp has NO detail pages for Universe Operations (8 fn), Universe Filters
-    (UnivExclude, UnivSubset), Benchmark Functions (BenchClose) — documented from dictionary
+    (UnivExclude, UnivSubset), Benchmark Functions (BenchClose) - documented from dictionary
     signature/short_desc fields.
   - p123api master public-method count is **38** (programmatic AST count,
     `build/data/client-methods.json`), vs registry baseline "37 measured 2026-06-09".
     `stock_factor_info` has two `@overload` stubs + one implementation (deduped).
   - Live api-docs.yml re-fetched at build time: identical to the local copy.
 - Agent input pre-fetch (`build/fetch_inputs.py`): p123api client.py/README/setup.py,
-  ai-factor-reference.md (16,418 B — matches registry), PR #3/#4/#6 diffs → `build/inputs/`.
+  ai-factor-reference.md (16,418 B - matches registry), PR #3/#4/#6 diffs → `build/inputs/`.
 - Agent briefs written: `build/briefs/common.md` + `agent-A..E.md`. Agent working notes go to
-  `build/notes/agent-X.md` (consolidated here by the orchestrator after Gate 1 — avoids
+  `build/notes/agent-X.md` (consolidated here by the orchestrator after Gate 1 - avoids
   concurrent writes to this file).
 
-## Phases 1–2 — Build agents + Gate 1 (2026-06-09)
+## Phases 1–2 - Build agents + Gate 1 (2026-06-09)
 
 All 15 reference files + 11 script files built by agents A–E in parallel. Gate 1 self-checks
 re-run independently by the orchestrator on every file: `check_names.py` exit 0 on all 15;
 slice coverage 100% on all 13 category files (only nominal "misses": the two Misc operator
-entries whose dictionary "code" is a symbol list — rendered as full operator tables instead);
+entries whose dictionary "code" is a symbol list - rendered as full operator tables instead);
 33/33 API operations + 38/38 wrapper methods in api.md; all 10 scripts `py_compile` clean;
 6/6 XML fences parse. Full agent notes: `build/notes/agent-{A..E}.md`.
 
-**Adjudications (Gate 2 dispute registry — one verdict, evidence in agent notes):**
+**Adjudications (Gate 2 dispute registry - one verdict, evidence in agent notes):**
 
 | Dispute | Verdict | Evidence |
 |---|---|---|
@@ -150,13 +150,13 @@ entries whose dictionary "code" is a symbol list — rendered as full operator t
 | ##USR10YR / ##RBDI → RTWEXBGS | `##RBDI → RTWEXBGS` kept; `##USR10YR` mapping dropped (blank, with note) | FRED series name "Real Broad Dollar Index"; both rows shared numeric_id=1320 (Agent E) |
 | Regional universe IDs (PR #6) | NOT shipped as verified (absent from dictionary); listed as PR-#6-reported only | Agents A + E independent checks |
 | v1/v2 fabrications dropped | `AccrualsTTM`, `Streak`, `LatestRank`, `RegEst`, `DataSeries(...)` formula form; `SecCount` is VALID (`SectorCount` is not) | Agent D notes |
-| AI Factor cost (R4.4) | Documented with both sources (spec `cost: 1` vs live-tested `20`); could NOT be resolved live — a predictor id from the owner's account is required and the API has no list-predictors operation. api.md advises budgeting 20 credits and confirming via the response's `cost`/`quotaRemaining`. Marker replaced 2026-06-09. | api.md → AI Factor |
+| AI Factor cost (R4.4) | Documented with both sources (spec `cost: 1` vs live-tested `20`); could NOT be resolved live - a predictor id from the owner's account is required and the API has no list-predictors operation. api.md advises budgeting 20 credits and confirming via the response's `cost`/`quotaRemaining`. Marker replaced 2026-06-09. | api.md → AI Factor |
 
 ## Gates 2–3 (2026-06-09)
 
 - **Gate 2 PASS** (`build/gate2_checks.py`, report `build/data/gate2-report.md`): 0 wrong-name
   contradictions across all 15 files; slice coverage 100% on all 13 category files (the six Misc
-  operator entries with symbol-list codes are rendered as operator tables — manually verified);
+  operator entries with symbol-list codes are rendered as operator tables - manually verified);
   0 bad relative links; all 13 header coverage lines match slice counts. Tooling note: the
   name-token regex was extended for mid-token `#` codes (`EPS#Positive`, `Inst#ShsOwn`...).
 - **Gate 3 PASS:**
@@ -165,10 +165,10 @@ entries whose dictionary "code" is a symbol list — rendered as full operator t
     programmatic method list (`build/verify_scripts_static.py`); Agent A cross-checked every
     params key against api-docs.yml + client.py (no disagreements on keys actually used).
   - **Live smoke (read-only, owner credentials from v3/.env mapped to P123_API_ID/P123_API_KEY):**
-    1. `01_auth_check.py` — PASS (authentication succeeded, Bearer token obtained). No cost.
-    2. `07_price_history.py --start 2026-05-01 --end 2026-05-15` — PASS (IBM, 11 rows of EOD
+    1. `01_auth_check.py` - PASS (authentication succeeded, Bearer token obtained). No cost.
+    2. `07_price_history.py --start 2026-05-01 --end 2026-05-15` - PASS (IBM, 11 rows of EOD
        bars returned). Free-trial ticker; no cost surfaced by the wrapper's pandas path.
-    3. `02_screen_run.py --universe SP500 --rule "Close(0) > 200" --max-holdings 10` — PASS
+    3. `02_screen_run.py --universe SP500 --rule "Close(0) > 200" --max-holdings 10` - PASS
        (10 rows returned, payload shape per PR #6: no per-rule `type`).
     No mutating call was executed (script 09 not run beyond `--help`-level checks; Ground Rule 5).
   - R4.4 outcome recorded above; api.md and script 08 docstring consistent.

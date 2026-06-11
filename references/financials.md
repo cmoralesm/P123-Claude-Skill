@@ -1,9 +1,9 @@
 <!-- name-whitelist: ItemName NAHandling barsAgo Q PQ PYQ PTM A PY Gr%PQ Gr%PYQ Gr%TTM Gr%A Gr%3Y Gr%5Y PSQ PSA %SalesQ %SalesA 3YAvg 5YAvg -->
-# Financials — Portfolio123 Reference
+# Financials - Portfolio123 Reference
 
 This file documents the **Financials** category of the Portfolio123 Factor Reference: income-statement, balance-sheet, and cash-flow line items. Each line item is exposed both as a function (e.g. `Sales(0, TTM)`) and as a family of pre-built factors (e.g. `SalesTTM`, `SalesGr%PYQ`). For valuation and profitability ratios built on top of these items see [Ratios & Statistics](ratios-statistics.md); for analyst estimates see [Estimates](estimates.md); for the formula-language rules that govern the `offset`/`type` arguments see [Misc](misc.md).
 
-Coverage: **101 functions / 2739 factors** — extracted from the official Factor Reference on 2026-06-09.
+Coverage: **101 functions / 2739 factors** - extracted from the official Factor Reference on 2026-06-09.
 
 ## How line-item functions work
 
@@ -5204,21 +5204,21 @@ Mapping of Portfolio123 functions to their Compustat and FactSet equivalents, fr
 | Item | Compustat | FactSet | P123 Function |
 |---|---|---|---|
 | Sales | SALE | ff_sales | `Sales` |
-| Sales International (Annual data only) | — | ff_sales_intl | `SalesIntl` |
+| Sales International (Annual data only) | - | ff_sales_intl | `SalesIntl` |
 | Cost of Goods Sold | COGS | ff_cogs_xdep | `CostG` |
 | Gross Profit | SALE - COGS | ff_sales - ff_cogs_xdep | `GrossProfit` |
 | Sales General and Administrative Expense | XSGA - XRD | ff_sga - ff_rd_exp | `SGandA` |
 | Research and Development expense | XRD | ff_rd_exp | `RandD` |
 | Operating Income Before Depreciation | OIBDP | ff_oper_inc_bef_dep | `OpIncBDepr` |
 | Amortization of Intangibles | AM | ff_amort_intang | `Amort` |
-| Impairment Charges | — | ff_impair | `Impair` |
+| Impairment Charges | - | ff_impair | `Impair` |
 | Depreciation and Amortization - Total | DP | ff_dep_amort_exp | `DepAmort` |
 | Operating Income After Depreciation | OIADP | IsNA(ff_ebit_oper, ff_oper_inc) | `OpIncAftDepr` |
 | Interest Expense | XINT | ff_int_exp_debt | `IntExp` |
 | Interest Income | IDIT | ff_int_inc | `IntInc` |
 | Non-Operating Expenses | NOPI | ff_non_oper_inc | `ExpNonOp` |
 | Special Items | SPI | ff_spec_items | `SpcItems` |
-| Stock Option Expense (millions) | — | ff_stk_opt_exp | `StkOptExp` |
+| Stock Option Expense (millions) | - | ff_stk_opt_exp | `StkOptExp` |
 | Income Before Taxes | PI | ff_ptx_inc | `IncBTax` |
 | Income Tax Expense | TXT | ff_inc_tax | `IncTaxExp` |
 | Tax Rate, Effective (%) | TXT / PI | ff_inc_tax / ff_ptx_inc | `TxRate%` |
@@ -5258,7 +5258,7 @@ Mapping of Portfolio123 functions to their Compustat and FactSet equivalents, fr
 | Tax Payable | TXP | ff_pay_tax | `TxPayable` |
 | Other Current Liabilities | LCO | ff_liabs_curr_oth | `LiabCurOther` |
 | Liabilities, Current | LCT | ff_liabs_curr | `LiabCur` |
-| Capital Lease Obligations | — | ff_cap_lease | `CapLease` |
+| Capital Lease Obligations | - | ff_cap_lease | `CapLease` |
 | Long Term Debt | DLTT | ff_debt_lt | `DbtLT` |
 | Deferred Taxes and Investment Credits | TXDITC | ff_dfd_tax_cr | `TxDfdIC` |
 | Other Liabilities | LO | ff_liabs_oth | `LiabNonCurOther` |
@@ -5287,7 +5287,7 @@ Mapping of Portfolio123 functions to their Compustat and FactSet equivalents, fr
 | Deferred Taxes | TXDC | ff_dfd_tax_xitc_cf | `TxDfd` |
 | Change in Accrued Income Taxes | TXACH | ff_pay_tax_cf | `TxAcrudChg` |
 | Other Net Working Capital Change | AOLOCH | ff_wkcap_chg | `OtherWCChg` |
-| Stock Option Expense | — | ff_stk_opt_cf | `StkOptCF` |
+| Stock Option Expense | - | ff_stk_opt_cf | `StkOptCF` |
 | Operating Cash Flow | OANCF | ff_oper_cf | `OperCashFl` |
 | Capital Expenditures | CAPX | ff_capex | `CapEx` |
 | Acquisitions | AQC | ff_acq_bus_cf | `Acquis` |
@@ -5326,7 +5326,7 @@ Mapping of Portfolio123 functions to their Compustat and FactSet equivalents, fr
 
 ## See Also
 
-- [Ratios & Statistics](ratios-statistics.md) — valuation, margin, profitability, and financial-strength ratios built on these line items.
-- [Estimates](estimates.md) — analyst estimate and revision factors.
-- [Fundamentals](fundamentals.md) — company descriptors and per-share/dividend items.
-- [Misc](misc.md) — formula-language operators, NA handling, and the `offset`/`type` period system.
+- [Ratios & Statistics](ratios-statistics.md) - valuation, margin, profitability, and financial-strength ratios built on these line items.
+- [Estimates](estimates.md) - analyst estimate and revision factors.
+- [Fundamentals](fundamentals.md) - company descriptors and per-share/dividend items.
+- [Misc](misc.md) - formula-language operators, NA handling, and the `offset`/`type` period system.

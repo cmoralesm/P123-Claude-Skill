@@ -1,15 +1,15 @@
-# Advanced Functions — Portfolio123 Reference
+# Advanced Functions - Portfolio123 Reference
 
 Advanced functions add cross-sectional ranking, historical and loop-based time series,
 regression, ranking-system access, AI-factor predictions, and screen/watchlist/account holdings
 logic to the P123 formula language. For the conditional and NA-handling operators (`Eval`,
 `IsNA`, `IsNeg`) and set statistics (`StdDev`, `RelStdDev`) see [Misc](misc.md); those are their
 official home category. The single- vs. two-argument `IsNA` defect is adjudicated here because
-loop and ranking formulas are where it most often bites — see
+loop and ranking formulas are where it most often bites - see
 [NA handling (IsNA arity)](#na-handling-isna-arity). For price and volume functions see
 [Technical](technical.md); for buy/sell rule state see [Strategy](strategy.md).
 
-Coverage line: 60 functions / 11 factors — extracted from the official Factor Reference on
+Coverage line: 60 functions / 11 factors - extracted from the official Factor Reference on
 2026-06-09. Official subcategories: AI Factor; Ranking; FHist Functions; Loop Functions; Loop
 Regression; Relative vs. History; Relative vs. Group; Group Summary Statistics; Screener Only;
 Watchlists, Holdings, & Opinions.
@@ -389,7 +389,7 @@ Group statistics across a scope. `FRank`, `FOrder`, and `ZScore` are covered und
 
 Average (`method = #Avg`, default) or cap-weighted average (`method = #CapAvg`) of the formula
 in each scope. `outlier_handl` is `#Exclude` (default) or `#Winsor`. P123 does not support
-`#Mean`, `#Median`, `#Sum`, `#Count`, `#Min`, or `#Max` as `Aggregate` methods — use `FMedian`,
+`#Mean`, `#Median`, `#Sum`, `#Count`, `#Min`, or `#Max` as `Aggregate` methods - use `FMedian`,
 `FSum`, `FCount`, or `ZScore` for those.
 
 #### `FCount("formula" [, scope])`
@@ -452,7 +452,7 @@ report. (`SetVar` itself lives in [Misc](misc.md).)
 Membership and timing of a stock in your watchlists, account, and portfolio positions, plus
 recorded opinions. For the `id` parameters use either the name in quotes or the numeric ID.
 
-### Functions — Watchlists
+### Functions - Watchlists
 
 #### `WatchlistCurrent("Name")`
 
@@ -479,7 +479,7 @@ added within the past 6 months.
 
 Bars since the stock was last removed; -1 if currently in the watchlist; NA otherwise.
 
-### Functions — Account Holdings
+### Functions - Account Holdings
 
 #### `Account(id1 [, .., id10])`
 
@@ -502,7 +502,7 @@ the past 6 months.
 
 Bars since the position was last closed; -1 if currently held; NA otherwise.
 
-### Functions — Portfolio Holdings
+### Functions - Portfolio Holdings
 
 #### `Portfolio(id1 [, .., id10])`
 
@@ -524,7 +524,7 @@ Calendar days since the position was last closed; -1 if currently held; NA other
 
 Bars since the position was last closed; -1 if currently held; NA otherwise.
 
-### Factors — Recent Opinion
+### Factors - Recent Opinion
 
 | Factor | Description | Period |
 |---|---|---|
@@ -550,7 +550,7 @@ Bars since the position was last closed; -1 if currently held; NA otherwise.
 
 ## See Also
 
-- [Misc](misc.md) — `SetVar`, `Eval`, `IsNA`, set statistics, and regression-value functions.
-- [Technical](technical.md) — price, volume, and moving-average functions.
-- [Strategy](strategy.md) — buy/sell rule state and ranking-based exits.
-- [Ranking System XML](ranking-system-xml.md) — building ranking systems that `Rating`/`Rank` read.
+- [Misc](misc.md) - `SetVar`, `Eval`, `IsNA`, set statistics, and regression-value functions.
+- [Technical](technical.md) - price, volume, and moving-average functions.
+- [Strategy](strategy.md) - buy/sell rule state and ranking-based exits.
+- [Ranking System XML](ranking-system-xml.md) - building ranking systems that `Rating`/`Rank` read.

@@ -9,7 +9,7 @@ reference see [`../references/api.md`](../references/api.md).
 
 | # | File | Wrapper call(s) | Mode | What it does |
 |---|---|---|---|---|
-| 0 | `p123_helpers.py` | — | library | Loads credentials from env, builds the client, prints `cost`/`quotaRemaining`, saves CSV. |
+| 0 | `p123_helpers.py` | - | library | Loads credentials from env, builds the client, prints `cost`/`quotaRemaining`, saves CSV. |
 | 1 | `01_auth_check.py` | `auth()`, `get_api_id()`, `get_token()` | read-only | Verifies credentials and confirms a token was obtained. |
 | 2 | `02_screen_run.py` | `screen_run(..., to_pandas=True)` | read-only | Runs a screen by inline definition or `--screen-id`; uses the post-PR-#6 payload (no per-rule `type` for long-only). |
 | 3 | `03_screen_backtest.py` | `screen_backtest`, `screen_rolling_backtest` (`--rolling`) | read-only | Backtests a screen and prints summary stats. |
@@ -60,14 +60,14 @@ accept `--csv <path>` to save the result.
 
 Most API responses include two fields from the `SharedResult` schema:
 
-- `cost` — credits the call consumed.
-- `quotaRemaining` — credits left in your current billing period.
+- `cost` - credits the call consumed.
+- `quotaRemaining` - credits left in your current billing period.
 
 The scripts print these via `print_quota` when present. Do not assume a fixed
 price: real cost depends on the data volume returned. The quota is shared across
 all operations (data, screening, backtesting, AI Factor), and the API allows only
 one in-flight request per key. The AI Factor per-call cost is unsettled between
-sources (spec example shows `1`; the live-tested reference reports `20`) — see
+sources (spec example shows `1`; the live-tested reference reports `20`) - see
 [`../references/api.md`](../references/api.md) (AI Factor). The free trial covers
 IBM, MSFT, and INTC with 5 years of history on `data` and `data/universe` without a
 data license.

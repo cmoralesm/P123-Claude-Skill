@@ -1,10 +1,10 @@
-# Estimates — Portfolio123 Reference
+# Estimates - Portfolio123 Reference
 
 <!-- name-whitelist: weekAgo cons_item rec_stat NAHandling -->
 
 Analyst-estimate data: consensus EPS and sales estimates, EBITDA/CapEx/FCF estimates, estimate revisions, earnings and sales surprises (including SUE/SUS), historical estimates, and recommendations. Computed valuation ratios live in [Ratios & Statistics](ratios-statistics.md); raw filing data is in [Financials](financials.md); the formula language is summarized in [Technical](technical.md).
 
-Coverage: **20 functions / 158 factors** — extracted from the official Factor Reference on 2026-06-09.
+Coverage: **20 functions / 158 factors** - extracted from the official Factor Reference on 2026-06-09.
 
 ## Contents
 
@@ -684,6 +684,6 @@ CapitalIQ uses a scale of 1 (strong buy), 2 (buy), 3 (hold), 4 (underperform), a
 
 ## See Also
 
-- [Ratios & Statistics](ratios-statistics.md) — computed valuation, margin, and per-share ratios.
-- [Financials](financials.md) — reported (actual) filing data behind the surprises.
-- [Technical](technical.md) — price/volume functions and the formula language.
+- [Ratios & Statistics](ratios-statistics.md) - computed valuation, margin, and per-share ratios.
+- [Financials](financials.md) - reported (actual) filing data behind the surprises.
+- [Technical](technical.md) - price/volume functions and the formula language.

@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.0.0] — 2026-06-10
+## [3.0.0] - 2026-06-10
 
 Ground-up rebuild. The curated 8-file skill is replaced by a complete, extraction-verified,
 category-structured reference.
@@ -8,7 +8,7 @@ category-structured reference.
 ### Added
 - **Full dictionary coverage**: all 4,463 factors and 465 functions of the official P123
   Factor Reference (extracted 2026-06-09), restructured into the 13 official categories plus
-  an API reference — 15 reference files total, each with verified header counts, official
+  an API reference - 15 reference files total, each with verified header counts, official
   subcategory ordering, and per-file Common Mistakes tables.
 - **473 uncounted vocabulary entries** documented for the first time: formula constants,
   country IDs, universe IDs, time/macro series IDs (with FRED mappings), and operators.
@@ -65,13 +65,13 @@ category-structured reference.
 
 ### Roadmap
 - **v3.1 candidate**: DataMiner operations reference (YAML jobs, screen/rank/data downloads)
-  — intentionally excluded from v3.0.
+  - intentionally excluded from v3.0.
 - Context-availability matrices for the 19 `vocabType` usage contexts (optional material
   identified during extraction).
 
-## [2.0.0] — 2026-03-22 (partial overlay, never released standalone)
+## [2.0.0] - 2026-03-22 (partial overlay, never released standalone)
 - Corrected ranking-system XML schema (validated against working P123 systems).
 - Expanded AI Factor API documentation.
 
-## [1.0.0] — 2026-03-XX
+## [1.0.0] - 2026-03-XX
 - Initial release: 8 curated reference files, basic API coverage.

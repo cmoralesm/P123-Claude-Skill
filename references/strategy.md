@@ -1,4 +1,4 @@
-# Strategy — Portfolio123 Reference
+# Strategy - Portfolio123 Reference
 
 Strategy factors and functions are evaluated inside a Portfolio123 Strategy (simulation or
 live portfolio) when buy and sell rules run. They expose portfolio-level state (cash, total
@@ -9,7 +9,7 @@ for price and volume functions usable in rules, see [Technical](technical.md). F
 rule syntax and worked rule patterns, see the [Buy/Sell Rule Patterns](#buysell-rule-patterns)
 section below.
 
-Coverage line: 4 functions / 51 factors — extracted from the official Factor Reference on
+Coverage line: 4 functions / 51 factors - extracted from the official Factor Reference on
 2026-06-09. Official subcategories: General; Diversification; Position.
 
 ## Contents
@@ -64,7 +64,7 @@ Maximum correlation coefficient of the stock being evaluated versus the existing
 To avoid buying stocks correlated above 0.5 on the 1-day price-change series over the past
 50 bars, use `MaxCorrel(50, 1) < 0.5` as a buy rule.
 
-### Factors — Country and Industry
+### Factors - Country and Industry
 
 | Factor | Description | Period |
 |---|---|---|
@@ -74,7 +74,7 @@ To avoid buying stocks correlated above 0.5 on the 1-day price-change series ove
 | `SubIndCount` | Number of positions in the sub-industry. | |
 | `SubIndWeight` | Weight of the sub-industry as a percentage of total market value. | |
 
-### Factors — Sector
+### Factors - Sector
 
 | Factor | Description | Period |
 |---|---|---|
@@ -83,7 +83,7 @@ To avoid buying stocks correlated above 0.5 on the 1-day price-change series ove
 | `SubSecCount` | Number of positions in the sub-sector. | |
 | `SubSecWeight` | Weight of the sub-sector as a percentage of total market value. | |
 
-### Factors — Market-Cap Concentration
+### Factors - Market-Cap Concentration
 
 P123 defines the cap bands as MicroCap (0–250M), SmallCap (250M–1B), MidCap (1B–5B), and
 LargeCap (greater than 5B). The grouped `CapCount`/`CapWeight` return the count/weight for the
@@ -102,7 +102,7 @@ band of the stock in context; the band-specific factors return a fixed band.
 | `LargeCount` | Number of positions in the LargeCap group. | |
 | `LargeWeight` | Weight of the LargeCap group as a percentage of total market value. | |
 
-### Factors — ETF Taxonomy
+### Factors - ETF Taxonomy
 
 For ETF strategies. Each `*Count`/`*Weight` pair returns the number of positions / weight in
 the ETF category named by the factor.
@@ -185,7 +185,7 @@ relative stop that does not fire when the market is also dropping is
 A Strategy uses buy rules to decide which stocks/ETFs may be bought and sell rules to decide
 when to exit. The rule syntax and the patterns below come from community PR #4; every factor
 and function name in them has been re-verified against the official dictionary. (PR #4 also
-corrected the NA-test idiom — see [Common Mistakes](#common-mistakes) and the
+corrected the NA-test idiom - see [Common Mistakes](#common-mistakes) and the
 [IsNA verdict in Advanced Functions](advanced-functions.md#na-handling-isna-arity).)
 
 ### Buy rules
@@ -219,13 +219,13 @@ Notes on the verified patterns:
 
 - `Close(0) > SMA_W(43)` requires price above the 43-week simple moving average.
 - `RankPos` and `Rank` come from the Strategy's selected ranking system; see
-  [Advanced Functions — Ranking](advanced-functions.md#ranking).
+  [Advanced Functions - Ranking](advanced-functions.md#ranking).
 - The `[Sell4]` rule ranks on average bid-ask spread; `[Sell5]` checks minimum daily dollar
   volume; `[Sell6]` ranks on the fraction of the industry in an uptrend.
 - `SecCount` and `IndCount` are diversification counts (see [Diversification](#diversification)).
 
 PR #4 wrote some names in lowercase (for example the moving-average and rank functions); this
-reference normalizes them to the canonical dictionary casing (`SMA`, `FRank`) throughout —
+reference normalizes them to the canonical dictionary casing (`SMA`, `FRank`) throughout -
 always use the casing exactly as listed in the reference files.
 
 ---
@@ -241,6 +241,6 @@ always use the casing exactly as listed in the reference files.
 
 ## See Also
 
-- [Advanced Functions](advanced-functions.md) — ranking, FRank/FCount, loop functions, NA handling.
-- [Technical](technical.md) — price, volume, and moving-average functions usable in rules.
-- [Ranking System XML](ranking-system-xml.md) — building the ranking system a Strategy sells on.
+- [Advanced Functions](advanced-functions.md) - ranking, FRank/FCount, loop functions, NA handling.
+- [Technical](technical.md) - price, volume, and moving-average functions usable in rules.
+- [Ranking System XML](ranking-system-xml.md) - building the ranking system a Strategy sells on.

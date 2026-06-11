@@ -1,15 +1,15 @@
-# Taxonomy — Portfolio123 Reference
+# Taxonomy - Portfolio123 Reference
 
 The Taxonomy category covers the ETF classification vocabularies. Each of the
 eight dimensions (asset class, country, family, method, region, sector, size,
 style) is exposed as a pair: a string factor that returns the ETF's code for
 that dimension, and a `...Set(...)` membership function that tests the ETF's
 code against a list you supply. These factors and functions apply to ETF
-contexts only — they classify exchange-traded funds, not ordinary equities. For
+contexts only - they classify exchange-traded funds, not ordinary equities. For
 stock industry and sector classification (RBICS) see
 [industry-sector.md](industry-sector.md).
 
-Coverage: 8 functions / 8 factors — extracted from the official Factor Reference
+Coverage: 8 functions / 8 factors - extracted from the official Factor Reference
 on 2026-06-09. The code tables below are reproduced verbatim from each factor's
 detail page.
 
@@ -459,6 +459,6 @@ Valid style codes (use these string values as the function arguments):
 
 ## See Also
 
-- [industry-sector.md](industry-sector.md) — RBICS sector/industry classification for stocks.
-- [misc.md](misc.md) — country IDs for the stock `Country(...)` function (a different vocabulary from ETF country codes).
-- [fundamentals.md](fundamentals.md) — the `Country` and `ExchCountry` functions for ordinary equities.
+- [industry-sector.md](industry-sector.md) - RBICS sector/industry classification for stocks.
+- [misc.md](misc.md) - country IDs for the stock `Country(...)` function (a different vocabulary from ETF country codes).
+- [fundamentals.md](fundamentals.md) - the `Country` and `ExchCountry` functions for ordinary equities.

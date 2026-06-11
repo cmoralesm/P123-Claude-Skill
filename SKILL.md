@@ -27,7 +27,7 @@ used in screen rules, ranking-system nodes, buy/sell rules, and API data pulls.
 Everything in this skill was extracted from the official P123 Factor Reference on 2026-06-09
 (4,463 factors and 465 functions across 13 categories, plus 473 constants/series-IDs/operators)
 and from the official OpenAPI spec and `p123api` wrapper source. **Never invent a factor or
-function name** — if a name is not in these reference files, assume it does not exist and look
+function name** - if a name is not in these reference files, assume it does not exist and look
 up the correct one.
 
 ## Which reference file to read
@@ -92,9 +92,9 @@ Close(0, GetSeries("$SP500"))
 **Line-item pattern (Financials).** Every statement line item is one function plus prebuilt
 factor variants: `Sales(offset, type[, NAHandling])` with `type` = `QTR`/`ANN`/`TTM` and
 `NAHandling` = `FALLBACK` (default), `KEEPNA`, `ZERONA`; prebuilt variants append period
-suffixes to the same base — `SalesQ`, `SalesPQ`, `SalesPYQ`, `SalesTTM`, `SalesPTM`, `SalesA`,
+suffixes to the same base - `SalesQ`, `SalesPQ`, `SalesPYQ`, `SalesTTM`, `SalesPTM`, `SalesA`,
 `SalesPY`, growth `SalesGr%TTM`/`SalesGr%A`, per-share `SalesPSQ`, averages `Sales5YAvg`,
-regressions `SalesRegGr%TTM`. The same suffix system drives most of the 4,463 factors — see
+regressions `SalesRegGr%TTM`. The same suffix system drives most of the 4,463 factors - see
 [references/financials.md](references/financials.md).
 
 **Screens vs rankings.** Screen rules are boolean tests evaluated per stock. Ranking systems
@@ -181,7 +181,7 @@ with p123api.Client(api_id='your api id', api_key='your api key') as client:
         print(e)
 ```
 
-Responses carry `cost` and `quotaRemaining` — track them; see api.md → Quotas & Costs.
+Responses carry `cost` and `quotaRemaining` - track them; see api.md → Quotas & Costs.
 For endpoint-by-endpoint docs, the 38-method wrapper map, AI Factor usage (historical `asOfDt`
 must be a Saturday), and known pitfalls (deprecated `includeNodeDetails` → `nodeDetails`,
 upload payloads via `data=`, the per-rule `type` bug), read
@@ -210,7 +210,7 @@ Full table and safety model: [scripts/README.md](scripts/README.md).
 
 1. Verify every factor/function name in the reference files before using it; never extrapolate
    from one name family to another (suffix rules differ by family).
-2. Read ranking-system-xml.md before any ranking XML work — no exceptions.
+2. Read ranking-system-xml.md before any ranking XML work - no exceptions.
 3. For API parameter names, api.md reflects the wrapper source where the spec disagrees
    (e.g. pass `api_id`/`api_key` as strings even though the spec types `apiId` as integer).
 4. Period suffixes: `Q`, `PQ`, `PYQ`, `TTM`, `PTM`, `A`, `PY` are the core family; growth and
@@ -218,3 +218,7 @@ Full table and safety model: [scripts/README.md](scripts/README.md).
    category file lists them.
 5. Mutating API operations (rebalance commits, uploads, deletes) require explicit user intent;
    default to dry runs (see scripts/README.md safety model).
+
+---
+
+Developed and maintained by [Quant Solvings](https://quantsolvings.com), a quantitative research practice in factor investing for equities.

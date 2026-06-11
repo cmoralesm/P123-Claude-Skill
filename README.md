@@ -1,12 +1,17 @@
 # Portfolio123 Claude Skill
 
+![Portfolio123 Claude Skill](https://raw.githubusercontent.com/cmoralesm/P123-Claude-Skill/main/docs/p123-skill.jpg)
+
 A [Claude Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) that turns
 Claude into a reliable Portfolio123 (P123) assistant: writing screen rules and formulas,
 building ranking-system XML, and pulling data through the REST API with the official
 `p123api` Python wrapper.
 
+Developed and maintained by **[Quant Solvings](https://quantsolvings.com)**, a quantitative
+research practice in factor investing for equities.
+
 **v3.0.0** is a ground-up rebuild with **full dictionary coverage**: every entry of P123's
-official Factor Reference, extracted and verified programmatically on 2026-06-09 —
+official Factor Reference, extracted and verified programmatically on 2026-06-09, totalling
 **4,463 factors and 465 functions** across the 13 official categories, plus 473
 constants/series-IDs/operators, the complete REST API surface (28 paths, 33 operations), and
 all 38 public `p123api` client methods.
@@ -35,9 +40,9 @@ portfolio123/
 │   ├── industry-sector.md        # 1 function / 91 factors (RBICS classification)
 │   ├── taxonomy.md               # 8 functions / 8 factors (ETF vocabularies)
 │   ├── misc.md                   # 43 functions / 20 factors + 473 constants, series IDs, operators
-│   └── ranking-system-xml.md     # Validated ranking XML schema — always read before XML work
+│   └── ranking-system-xml.md     # Validated ranking XML schema; always read before XML work
 ├── scripts/                      # 9 runnable CLI examples + p123_helpers.py (see scripts/README.md)
-├── evals/evals.json              # 12 evaluation prompts (repo only; excluded from the .skill package)
+├── docs/                         # repository assets (excluded from the .skill package)
 ├── BUILD-STATE.md                # build & verification log for this release
 ├── README.md · CHANGELOG.md · LICENSE · .gitignore
 ```
@@ -88,7 +93,7 @@ export P123_API_ID=your_api_id        # PowerShell: $env:P123_API_ID = "..."
 export P123_API_KEY=your_api_key
 python scripts/01_auth_check.py
 python scripts/02_screen_run.py --universe SP500 --rule "Close(0) > 200" --max-holdings 10
-python scripts/07_price_history.py    # IBM by default — works on the API free trial
+python scripts/07_price_history.py    # IBM by default; works on the API free trial
 ```
 
 API credentials: P123 Account Settings → API (paying subscription required; the spec's free
@@ -120,9 +125,9 @@ unless run with `--execute` and a typed confirmation. See [scripts/README.md](sc
 ## Contributing
 
 Issues and PRs welcome. Ground rule for content changes: every factor/function name must be
-verifiable against the official Factor Reference — PRs that add unverified names will be
+verifiable against the official Factor Reference; PRs that add unverified names will be
 asked to include the verification evidence.
 
 ## License
 
-[MIT](LICENSE) — copyright QuantSolvings.
+[MIT](LICENSE), copyright [Quant Solvings](https://quantsolvings.com).

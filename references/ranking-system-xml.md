@@ -1,4 +1,4 @@
-# Ranking System XML — Portfolio123 Reference
+# Ranking System XML - Portfolio123 Reference
 
 > **ALWAYS read this file before generating ranking-system XML.** P123 ranking systems use a
 > strict tag hierarchy; the schema and the factor names below were validated against working
@@ -18,7 +18,7 @@ also appear in the category references ([Financials](financials.md),
 - [RankType Direction Quick Reference](#ranktype-direction-quick-reference)
 - [Verified Factor Names](#verified-factor-names)
 - [Common Formula Expressions](#common-formula-expressions)
-- [Worked Example — Penman & Pope](#worked-example--penman--pope)
+- [Worked Example - Penman & Pope](#worked-example--penman--pope)
 - [Known Formula Errors to Avoid](#known-formula-errors-to-avoid)
 - [See Also](#see-also)
 
@@ -26,15 +26,15 @@ also appear in the category references ([Financials](financials.md),
 
 ## Critical rules
 
-- `<RankingSystem>` is the root node — nothing else can be the root.
+- `<RankingSystem>` is the root node - nothing else can be the root.
 - There is no `<RankPerformance>` wrapper; composites sit directly inside `<RankingSystem>`.
-- `%` characters in factor names are fine inside `<Factor>` and `<Formula>` tags — do not escape
+- `%` characters in factor names are fine inside `<Factor>` and `<Formula>` tags - do not escape
   them.
 - Use `<Composite>` for grouping nodes, never `<SNode>`.
 - Use `<StockFactor>` / `<Factor>` for pre-built P123 factors.
 - Use `<StockFormula>` / `<Formula>` for custom formula expressions.
 - Use `<IndFactor>` / `<Factor>` for industry-level factors.
-- Test for missing data with `expression = NA` inside a formula — `IsNA` is a two-argument
+- Test for missing data with `expression = NA` inside a formula - `IsNA` is a two-argument
   replacement function, not a single-argument boolean (see
   [Known Formula Errors](#known-formula-errors-to-avoid)).
 
@@ -299,7 +299,7 @@ exist and take `(offset, type)` arguments.
 
 ---
 
-## Worked Example — Penman & Pope
+## Worked Example - Penman & Pope
 
 A five-factor ranking system. Note the cash-flow-quality and asset-growth formulas use
 `expression = NA` (not single-argument `IsNA`), and accruals are computed from a formula because
@@ -432,7 +432,7 @@ recorded in the build notes).
 
 ## See Also
 
-- [Financials](financials.md) — balance-sheet, income, and cash-flow factor names.
-- [Ratios & Statistics](ratios-statistics.md) — valuation, profitability, and growth ratios.
-- [Technical](technical.md) — price and momentum formulas for ranking nodes.
-- [Advanced Functions](advanced-functions.md) — `FRank`, `ZScore`, and NA handling in formulas.
+- [Financials](financials.md) - balance-sheet, income, and cash-flow factor names.
+- [Ratios & Statistics](ratios-statistics.md) - valuation, profitability, and growth ratios.
+- [Technical](technical.md) - price and momentum formulas for ranking nodes.
+- [Advanced Functions](advanced-functions.md) - `FRank`, `ZScore`, and NA handling in formulas.

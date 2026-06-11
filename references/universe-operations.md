@@ -1,4 +1,4 @@
-# Universe Operations — Portfolio123 Reference
+# Universe Operations - Portfolio123 Reference
 
 Universe Operations are aggregation functions that compute a statistic (average,
 count, sum, etc.) across every stock in the current universe that passes a
@@ -9,10 +9,10 @@ functions (`Avg`, `Max`, `Median`, ...) see [misc.md](misc.md). Each function
 takes a quoted `"criteria"` formula and, for value statistics, a quoted
 `"formula"` to evaluate over the matching stocks.
 
-Coverage: 8 functions / 0 factors — extracted from the official Factor Reference
+Coverage: 8 functions / 0 factors - extracted from the official Factor Reference
 on 2026-06-09. These functions have no individual detail pages in the official
 documentation (`doc_index.jsp`), so each entry below is built from the dictionary
-fields (code, signature, description) only — no Parameters or Examples sections
+fields (code, signature, description) only - no Parameters or Examples sections
 are invented.
 
 ## Universe Operations
@@ -52,6 +52,6 @@ Calculate the sum of the values of `"formula"` for the stocks that pass `"criter
 
 ## See Also
 
-- [universe-filters.md](universe-filters.md) — filter the universe by ticker or RBICS.
-- [misc.md](misc.md) — the small-set statistics functions (`Avg`, `Max`, `Median`), universe IDs, and operators.
-- [technical.md](technical.md) — cross-sectional ranking functions.
+- [universe-filters.md](universe-filters.md) - filter the universe by ticker or RBICS.
+- [misc.md](misc.md) - the small-set statistics functions (`Avg`, `Max`, `Median`), universe IDs, and operators.
+- [technical.md](technical.md) - cross-sectional ranking functions.

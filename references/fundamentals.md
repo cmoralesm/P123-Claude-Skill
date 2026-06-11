@@ -1,4 +1,4 @@
-# Fundamentals — Portfolio123 Reference
+# Fundamentals - Portfolio123 Reference
 
 Fundamentals covers company-level data that is not a line item from the financial
 statements: Actuals (press-release earnings/sales), company identity and
@@ -9,7 +9,7 @@ For balance-sheet, income-statement, and cash-flow line items see
 [ratios-statistics.md](ratios-statistics.md); for analyst estimates see
 [estimates.md](estimates.md).
 
-Coverage: 61 functions / 124 factors — extracted from the official Factor
+Coverage: 61 functions / 124 factors - extracted from the official Factor
 Reference on 2026-06-09.
 
 ## Contents
@@ -32,7 +32,7 @@ collected primarily from press releases and brokers, as opposed to fundamentals
 that come from official filings. They are never restated, can be more frequent
 than filings, and are primarily used to compute surprises versus analyst
 estimates. The generic `Actual...` functions take an `actual_item` code (for
-example `#EBIT`, `#CAPX` — see the Actual Item constants in
+example `#EBIT`, `#CAPX` - see the Actual Item constants in
 [misc.md](misc.md#constants)); the `SalesActual`, `EPSActual`, and `EBITDAActual`
 functions are convenience wrappers for those items.
 
@@ -593,7 +593,7 @@ outstanding, days-to-cover ratio, and percent change.
 
 ## See Also
 
-- [financials.md](financials.md) — balance-sheet, income-statement, and cash-flow line items, including `DivPaid`.
-- [ratios-statistics.md](ratios-statistics.md) — ratios and statistics derived from fundamentals.
-- [estimates.md](estimates.md) — analyst estimates and the surprise factors computed against Actuals.
-- [misc.md](misc.md#constants) — the constant vocabularies referenced above (Actual Item, country IDs, corporate-action and dividend constants).
+- [financials.md](financials.md) - balance-sheet, income-statement, and cash-flow line items, including `DivPaid`.
+- [ratios-statistics.md](ratios-statistics.md) - ratios and statistics derived from fundamentals.
+- [estimates.md](estimates.md) - analyst estimates and the surprise factors computed against Actuals.
+- [misc.md](misc.md#constants) - the constant vocabularies referenced above (Actual Item, country IDs, corporate-action and dividend constants).
