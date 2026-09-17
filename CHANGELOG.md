@@ -1,5 +1,32 @@
 # Changelog
 
+## [4.1.1] - 2026-09-17
+
+Closes the last open item carried from 3.0.0: the regional universe IDs reported in issue #5 /
+PR #6 were documented but never verified, because no local artifact contains them and the OpenAPI
+spec does not enumerate universes at all (`UniverseDef` is just "name or id"). They were confirmed
+against the live API instead.
+
+### Fixed
+- **Regional universe IDs are verified, not "reported".** All 19 IDs from issue #5 / PR #6 resolve
+  on the live API, plus `TSX`, `TSXV`, `CanadaTrust` and `ALLFUNDCDRCAD`. `api.md` now lists them
+  by region as verified on 2026-09-17 instead of warning that they are unconfirmed.
+- **`CDR` is not a universe ID.** It was reported alongside the others; the server answers
+  `Universe <CDR> not found`. The Canadian-dollar CDR universe is `ALLFUNDCDRCAD`. Removed.
+- **`ALLFUND` is US-listed, not global** (the second half of issue #5, never incorporated until
+  now). Its dictionary label "All Fundamentals" reads as if it spanned every market; it holds
+  US-listed securities, foreign companies included through their US lines and ADRs. Corrected in
+  `misc.md` and documented in `api.md` with the live evidence.
+- **Cross-region `p123Uid` trap** found while verifying the above: the same company carries a
+  different UID per listing - Royal Bank of Canada is `7652` (`RY`, in `ALLFUND`) and `47778`
+  (`RY:CAN`, in the Canadian and North American universes). Joining on `p123Uid` across regions
+  silently misses those pairs.
+
+### Added
+- **How to probe a universe ID for free.** An unknown ID returns `Universe <X> not found`; a real
+  ID outside your subscription returns `Universe <X> is not in your subscribed regions`. Both are
+  HTTP 400 and neither consumes credits, so an ID can be checked without a regional data licence.
+
 ## [4.1.0] - 2026-09-17
 
 First public release since 3.0.0. It ships the 4.0.0 defect fixes, which were finished on

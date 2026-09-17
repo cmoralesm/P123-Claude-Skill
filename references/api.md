@@ -24,7 +24,8 @@ dataSeriesId factorId processedTransactions tranId transId orderUid settleDt lim
 mktUid avgShareCost daysHeld benchmarkId rankingSystemId reconPeriod rebalPeriod rebalMode
 SPTSX SPTSX60 EU600 EU200L EU200M EU200S TRADEUSA TRADEEUR TRADENOAM TRADENOAT NanoCap
 ALLFUNDCAN PRIMARYCAN ALLSTOCKSCAN ALLFUNDEUR PRIMARYEUR PRIMARYNOAM PRIMARYNOAT PRIMARYUSA
-ALLFUNDCDRCAD CanadaTrust priceDt updateDt rawData includeRawData ApiRankingSystem
+ALLFUNDCDRCAD CanadaTrust TSX TSXV PTCCY RY GS priceDt updateDt rawData includeRawData
+ApiRankingSystem
 RebalOp Recon ReconRebal Rebal DataParams DataUniverseParams ScreenRunParams ScreenParams
 ScreenRuleParams RankRanksParams RankPerfParams RebalanceParams RebalanceCommitParams
 PredictParams SharedResult AuthParams AccessToken StrategyTran RebalanceTran UniverseParams
@@ -995,16 +996,37 @@ parameter name, **the wrapper wins** (it is closer to production).
   The server accepts the lowercase form; the examples here follow the spec casing where practical
   but either is accepted.
 
-### Regional universe IDs (PR #6 - reported, not in extraction artifacts)
+### Regional universe IDs (verified live 2026-09-17)
 
-PR #6 adds regional universe IDs for non-US markets. **None of these appear in the P123 extraction
-dictionary** (`dictionary-by-code.json`); only `SP500`, `NASDAQ100`, `ALLSTOCKS`, `ALLFUND`,
-`Prussell1000/2000/3000`, `SP400/600/1500`, `DJIA`, and the cap tiers (`LargeCap`…`MicroCap`) are
-verified there. List the following as **PR-#6-reported only**, to be confirmed against a live
-universe call before relying on them: Canada - `ALLFUNDCAN`, `PRIMARYCAN`, `ALLSTOCKSCAN`, `SPTSX`,
-`SPTSX60`; Europe - `ALLFUNDEUR`, `PRIMARYEUR`, `EU600`, `EU200L`, `EU200M`, `EU200S`;
-multi-region - `PRIMARYNOAM`, `PRIMARYNOAT`, `TRADEEUR`, `TRADENOAM`, `TRADENOAT`; plus
-`PRIMARYUSA`, `TRADEUSA`, and `NanoCap`.
+These IDs work as the `universe` parameter but do **not** appear in the P123 extraction dictionary
+(`dictionary-by-code.json`), which only carries `SP500`, `NASDAQ100`, `ALLSTOCKS`, `ALLFUND`,
+`Prussell1000/2000/3000`, `SP400/600/1500`, `DJIA`, the exchange sets and the cap tiers
+(`LargeCap`…`MicroCap`). They were reported in issue #5 / PR #6 and each one was confirmed against
+the live API on 2026-09-17 with a one-row `screen_run`.
+
+| Region | Verified IDs |
+|---|---|
+| Canada | `ALLFUNDCAN`, `PRIMARYCAN`, `ALLSTOCKSCAN`, `SPTSX`, `SPTSX60`, `TSX`, `TSXV`, `CanadaTrust`, `ALLFUNDCDRCAD` |
+| Europe | `ALLFUNDEUR`, `PRIMARYEUR`, `EU600`, `EU200L`, `EU200M`, `EU200S`, `TRADEEUR` |
+| Multi-region | `PRIMARYNOAM`, `PRIMARYNOAT`, `TRADENOAM`, `TRADENOAT` |
+| United States | `PRIMARYUSA`, `TRADEUSA`, `NanoCap` |
+
+A universe named CDR was reported alongside these and does **not** exist: the server answers
+`Universe <CDR> not found`. The Canadian-dollar CDR universe is `ALLFUNDCDRCAD`.
+
+**Reading the two error messages.** An unknown ID returns `Universe <X> not found`; a real ID your
+subscription does not cover returns `Universe <X> is not in your subscribed regions`. Both are HTTP
+400 and neither costs credits, so probing an ID is free - the second message is what proves an ID
+exists without a regional data licence.
+
+**`ALLFUND` is US-listed, not global.** Its dictionary label, "All Fundamentals", reads as if it
+spanned every market. It does not: it holds securities listed in the US, which includes foreign
+companies through their US lines and ADRs. A live band screen on `MktCap` between 280,000 and
+287,000 returns `PTCCY` (PetroChina ADR), `RY` and `GS` from `ALLFUND`, but `RY:CAN` and `GS` from
+`PRIMARYNOAM`. Note the consequence for cross-region work: the same company carries a **different
+`p123Uid`** per listing - Royal Bank of Canada is `7652` as `RY` in `ALLFUND` and `47778` as
+`RY:CAN` in the Canadian and North American universes. Joining on `p123Uid` across universes of
+different regions will silently miss those pairs.
 
 ## Common Mistakes
 

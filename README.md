@@ -16,7 +16,9 @@ Claude into a reliable Portfolio123 (P123) assistant: writing screen rules and f
 building ranking-system XML, replicating published factors, and pulling data through the REST API
 with the official `p123api` Python wrapper.
 
-**v4.1.0** is the first public release since v3.0.0, and it carries two releases' worth of work.
+**v4.1.1** is the current release. 4.1.0 was the first public release since v3.0.0 and carried two
+releases' worth of work; 4.1.1 adds live verification of the regional universe IDs, the last item
+still open from the v3.0.0 community reports.
 
 **New in 4.1** - a factor-replication reference and an API refresh:
 

@@ -625,3 +625,30 @@ entries whose dictionary "code" is a symbol list - rendered as full operator tab
        (10 rows returned, payload shape per PR #6: no per-rule `type`).
     No mutating call was executed (script 09 not run beyond `--help`-level checks; Ground Rule 5).
   - R4.4 outcome recorded above; api.md and script 08 docstring consistent.
+
+## v4.1.1 verification pass (2026-09-17)
+
+Closed the regional-universe item carried since v3.0.0. It could never be settled from artifacts:
+the IDs are absent from `dictionary-by-code.json`, and the live OpenAPI spec does not enumerate
+universes at all (`UniverseDef` is `"Universe name or id"`, a bare oneOf). Settled against the
+live API through the p123-mcp server, read-only, 32 credits of the 2000 budget (quota after:
+1291).
+
+Method: a one-row `screen_run` per ID (`MktCap` rule, `maxNumHoldings: 1`). The server
+distinguishes two HTTP 400s - `Universe <X> not found` for an unknown ID, `Universe <X> is not in
+your subscribed regions` for a real ID outside the subscription - and neither error consumes
+credits, so an unsubscribed region is still provable at zero cost. Control: `NOTAREALUNIVERSE123`
+returned `not found`, confirming the two messages discriminate.
+
+Results: 19 of 19 reported IDs are real, plus `TSX`, `TSXV`, `CanadaTrust`, `ALLFUNDCDRCAD`.
+`CDR` is **not** a universe (`not found`) and was removed. Canada, North America and the US
+returned live rows on this account (2 credits each); Europe and North Atlantic returned the
+subscription error, which still proves the IDs exist.
+
+`ALLFUND` scope resolved with a market-cap band screen: `ALLFUND` returns `PTCCY`, `RY`, `GS`
+where `PRIMARYNOAM` returns `RY:CAN`, `GS`. So `ALLFUND` is US-listed (ADRs and foreign US lines
+included), not global, and the same company carries a different `p123Uid` per listing (`RY` 7652
+vs `RY:CAN` 47778) - recorded in `api.md` and `misc.md`.
+
+Not re-run in this pass: nothing else changed, so the 4.1.0 gate results stand for every other
+file. `check_names.py` re-run on the two edited references; both clean.

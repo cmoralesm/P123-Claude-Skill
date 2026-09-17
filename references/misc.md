@@ -1039,7 +1039,7 @@ the official factor totals.
 
 | Code | Description |
 |---|---|
-| `ALLFUND` | All Fundamentals |
+| `ALLFUND` | All Fundamentals. US-**listed** securities, including foreign companies through their US lines and ADRs - not a global universe (verified live 2026-09-17; see [api.md](api.md#regional-universe-ids-verified-live-2026-09-17)). |
 | `ALLSTOCKS` | All Stocks |
 
 ### Universe IDs - Major USA
