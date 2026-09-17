@@ -659,7 +659,8 @@ unchanged. This inline form is the only option in single-formula contexts
 (ranking-system nodes, API `formulas` entries), where there is no "next rule".
 
 ```p123
-// Signed square of 12-1 momentum, definition inlined
+// Signed square of momentum (total return over 252 bars, ending 21 bars ago;
+// this is a thirteen-month span, not 12-1 - see factor-replication.md)
 SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)
 // Boolean form
 SetVar(@r, Ret%Chg(252, 21)) and @r > 10

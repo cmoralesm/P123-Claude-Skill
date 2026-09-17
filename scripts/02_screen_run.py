@@ -8,8 +8,9 @@ for long/short and hedged screens (see api.md -> Known Pitfalls).
 Endpoint(s): POST /screen/run.
 Wrapper method(s): Client.screen_run(params, to_pandas=True).
 
-API quota note: the response carries cost and quotaRemaining; this script prints
-them via print_quota when available (kept on the DataFrame's attrs['raw_obj']).
+API quota note: the response carries cost and quotaRemaining, but screen_run's
+to_pandas path builds a bare DataFrame and keeps no attrs['raw_obj'], so they are
+read from client.cost / client.quotaRemaining (p123api 3.1.0+).
 
 Mode: READ-ONLY. Changes no account state.
 
@@ -83,7 +84,7 @@ def main():
     try:
         with make_client() as client:
             frame = client.screen_run(params, to_pandas=True)
-            print_quota(frame)
+            print_quota(frame, client)
             print(frame.to_string(index=False))
             if args.csv:
                 save_csv(frame, args.csv)

@@ -126,7 +126,8 @@ Percent from the low in the period using the weekly series.
 
 **Example**
 ```p123
-// 12-1 month momentum (skip the most recent month)
+// Total return over 252 bars, ending 21 bars ago (the skill's momentum idiom;
+// the literal 12-1 formation window is Ret%Chg(231, 21) - see factor-replication.md)
 Ret%Chg(252, 21)
 // Beat the benchmark over the past year
 Rel%Chg(252) > 0
@@ -671,7 +672,13 @@ Average of the percentage moves over the selected period.
 
 #### `BetaFunc(period, samples [, min_samples, offset, series])`
 
-Stock's beta with the country's main benchmark.
+Stock's beta with the country's main benchmark. `period` is the **number of bars per return**, not
+the window length; `samples` is how many of those returns are regressed. `min_samples` defaults to
+`0`, which means *all* samples are required - a call asking for more history than a stock has
+returns NA. P123 documents `Beta1Y` as `BetaFunc(5, 52, 0)`, `Beta3Y` as `BetaFunc(5, 156, 70)`
+and `Beta5Y` as `BetaFunc(5, 261, 100)`. Reversing the first two arguments is the common error:
+`BetaFunc(52, 104)` asks for 104 samples of 52-bar returns - about twenty years - and returns NA
+for almost every stock.
 
 #### `Correl(period, samples, series [, series2])`
 
@@ -688,8 +695,9 @@ A Sortino-like ratio (not adjusted for the risk-free return). `range` is the tot
 
 **Example**
 ```p123
-// Custom beta: 52-week window, 104 weekly samples
-BetaFunc(52, 104)
+// One-year beta: 52 weekly (5-bar) returns, all of them required.
+// P123 documents Beta1Y as equivalent to this call - prefer the factor.
+BetaFunc(5, 52, 0)
 // SD of 52 weekly % moves; annualize is the 5th argument, not passed here
 PctDev(52, 5)
 // Same window, annualized by P123 - prefer this form
@@ -757,6 +765,7 @@ Annualized standard deviation of total return.
 | `HiBar(...)` | `HighValBar(...)` | The bar-of-high function is `HighValBar`. |
 | `LoBar(...)` | `LowValBar(...)` | The bar-of-low function is `LowValBar`. |
 | `Sqrt(x)` | `x^0.5` | There is no square-root function; `^` is the power operator (see [Misc](misc.md)). |
+| `BetaFunc(52, 104)` | `Beta1Y`, or `BetaFunc(5, 52, 0)` | First argument is bars **per return**, second is the sample count - so this asks for 104 samples of 52-bar returns and, with `min_samples` defaulting to "all required", returns NA for almost every stock. |
 
 ---
 

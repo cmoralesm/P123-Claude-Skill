@@ -2,6 +2,295 @@
 
 Claude Code: update this file after completing each phase/gate (see ../PLAN.md).
 
+## v4.1.0 - replication reference + API refresh (2026-09-17)
+
+**No re-extraction, no re-build.** `v4.1/` started as a byte-for-byte copy of `v4/` (the finished
+but unpublished 4.0.0 tree). The 2026-06-09 Factor Reference extraction is unchanged and remains
+the source of truth for every factor and function name. What moved under the release is external:
+Portfolio123 extended its REST surface on 2026-08-28, and the `p123api` wrapper went to 3.1.0.
+
+**Input.** Two drivers, neither of them a defect report:
+
+1. **Spec drift.** The live OpenAPI document served at `api.portfolio123.com/docs/api-docs.yml`
+   went from 28 paths / 33 operations to **32 paths / 39 operations**. 4.0.0 shipped a passage
+   stating that the spec defines no `GET` under the Data Series tag, and used that absence to
+   explain a `405` reported from a live account. `GET /dataSeries` now exists, so that passage is
+   false as a statement about the current API. Correcting it honestly - in place, saying what
+   changed and when, rather than deleting the paragraph - is the headline of this release.
+2. **Wrapper drift.** `p123api` 3.1.0 is a breaking release against the 2.3.0 line 4.0.0
+   documented: Python 3.10+, pandas demoted to an extra, nine methods returning typed objects
+   instead of dicts, four keyword-only lookups, six new methods.
+
+| # | Item | Ground truth used | Files edited |
+|---|---|---|---|
+| 1 | API surface 33 → 39 operations; `GET /dataSeries` correction | `buildnotes/api-docs.live.yml` (live capture, 2026-09-03), diffed against the 2026-06-09 `api-docs.yml` | `references/api.md` |
+| 2 | Wrapper 2.3.0 → 3.1.0 | installed `p123api` 3.1.0 `client.py` / `types.py` (AST-read), diffed against the installed 2.3.0 | `references/api.md`, `scripts/` (7 files) |
+| 3 | Factor-replication reference | `build/data/dictionary-by-code.json`, `build/data/details.json`, offline `p123_ref_*` validators | `references/factor-replication.md` (new), `SKILL.md` |
+| 4 | Contradictions the new file exposed elsewhere | `details.json` (`MScoreTATA`, `BetaFunc`, `Ret%Chg`) | `references/ranking-system-xml.md`, `references/technical.md`, `SKILL.md` |
+
+**Diff vs. v4 (`diff -rq v4 v4.1`, `__pycache__` excluded): 1 new file, 16 modified files - 12
+content files plus the 4 release-paperwork files listed after the table.** The table below covers
+the 12; the numbers include the 2026-09-17 repair pass recorded at the end of this section.
+
+| File | Substance |
+|---|---|
+| `references/factor-replication.md` | **NEW, 523 lines.** 35 recipes across 7 anomaly families; per-family translation traps; worked Quality-sleeve XML; 7 constructions P123 cannot reproduce, each with a proxy; an 11-row real-factor-vs-real-factor substitution table; 19-row Common Mistakes table. No performance figures anywhere, by design. |
+| `references/api.md` | 643 → 1040 lines (+476/-120, 23 hunks). New `## Spec Changes (2026-08-28)`, `## Migrating from p123api 2.x`, `### Return types`, `### Keyword-only lookups`. Wrapper Method Map rebuilt to 44 rows. Every "does not exist" claim about the older spec corrected in place and dated. |
+| `references/ranking-system-xml.md` | +6/-5. Four spots claimed no pre-built accruals factor exists; `MScoreTATA` contradicts that. Now: no factor is *named* for accruals, with the `AstTotQ` vs `AstTotTTM` denominator difference stated. |
+| `references/technical.md` | +13/-4. `Ret%Chg(252, 21)` was captioned "12-1 month momentum"; it spans thirteen months. Comment rewritten, pointing at `Ret%Chg(231, 21)`. Repair pass: the `BetaFunc` example and signature entry, plus a Common Mistakes row. |
+| `references/misc.md` | +2/-1 (repair pass). The `SetVar` example's "12-1 momentum" caption - NEW-11. |
+| `SKILL.md` | Routing row for `factor-replication.md`; named-constructions paragraph under the style table; Low volatility row `BetaFunc(52, 104)` → `TRSD1YD` / `PctDev(52, 5)` / `Beta1Y`; Momentum row gains `Ret%Chg(231, 21)`; front matter 33 → 39 operations; 38 → 44 wrapper methods; install line gains the `[pandas]` extra; free-trial claim on script 07 narrowed. |
+| `scripts/p123_helpers.py` | `print_quota(result, client=None)` gains `client.cost` / `client.quotaRemaining` as a third source; install and credential docstrings updated for 3.1.0. |
+| `scripts/02, 03, 06, 08` | Docstrings updated; `client` passed to `print_quota`. `04`, `05` and `09` are untouched, `01` too; `07` changed only in its docstring. The new parameter defaults to `None`. |
+| `scripts/07_price_history.py` | Docstring only: the quota paragraph (it had claimed to print quota via `print_quota`, which it never calls) and, in the repair pass, the free-trial claim. |
+| `scripts/README.md` | Wrapper-version paragraph, `pip install "p123api[pandas]"`, rewritten quota paragraph, plus a `name-whitelist` header (**6** API identifiers; `check_names.py` flagged 7 occurrences of them at baseline) so the file passes Gate 1. No prose reworded for the gate. |
+
+Release paperwork edited afterwards: `README.md` (rebuilt - see Decisions), `CHANGELOG.md`
+(4.1.0 entry + a "superseded by 4.1.0" marker on the 4.0.0 `data_series_info` bullet), this file,
+`evals/evals.json` (+6 evals, ids 19–24 → 24 total; ids 15 and 18 also revised in the repair pass).
+
+### Verification actually run (2026-09-17)
+
+First-hand on the v4.1 tree; results as observed, not as reported by the editing agents.
+
+| Check | Tool | Result |
+|---|---|---|
+| Live spec counts | `yaml.safe_load` on `buildnotes/api-docs.live.yml` | **32 paths / 39 operations / 9 tags / 111 component schemas**, OpenAPI 3.1.0 |
+| Spec diff vs. the 2026-06-09 capture | set difference on (path, method) | **6 added, 0 removed**: `GET /dataSeries`, `GET /rank`, `POST /rank/create`, `GET /strategy`, `POST /strategy/{id}/copy`, `POST /strategy/{id}/copy-book`. Stale capture: 28/33/9/102 |
+| Wrapper public method count | `ast` walk of the installed 3.1.0 `client.py`, `@overload` stubs excluded | **44** (39 endpoint-backed incl. `auth`, 5 helpers). Installed version confirmed `3.1.0`; file is 1258 lines |
+| Name validation (Gate 1) | `build/check_names.py` | **PASS, exit 0 on all 19 shipped markdown files**: 16 reference files, `SKILL.md`, `scripts/README.md`, `README.md`. `README.md` was **red** at baseline (2 unknown names) and is now clean |
+| Fence balance | ad-hoc, 21 markdown files | **PASS** - all even |
+| Table column counts within each table block | ad-hoc (`\|`-split, escaped `\\\|` respected) | **PASS** - 0 mismatched blocks |
+| Relative links + `#anchors` across the tree | ad-hoc GitHub-slug checker (gate2 2.3 logic) | **PASS on every v4.1-introduced link**; the single failure is NEW-2, the pre-existing `estimates.md` → `#recs-opinions` anchor inherited from v3 in an untouched file |
+| `evals.json` schema + JSON validity | `json.load` + shape check | **PASS** - 24 evals, ids 1–24 contiguous, every object `{id, prompt, expected_output, expectations}`; of the inherited 1–18, only 15 and 18 differ from v4 |
+| Scripts compile | `py_compile` on all 10 `.py` files | **PASS**; `__pycache__/` removed afterwards |
+| Every formula and identifier written into `SKILL.md` and `evals.json` | offline `p123_ref_validate_formula` / `p123_ref_lookup` (MCP, **0 credits**) | **PASS** - 53 formulas checked across three batches, `unknown_total: 0`, `pitfall_total: 0` |
+| Every formula touched by the repair pass | offline `p123_ref_validate_formula`, `context="ranking"` (**0 credits**) | **PASS** - 14 formulas, `unknown_total: 0`, `pitfall_total: 0`, including the new `Ret%Chg(84, 42)`, `BetaFunc(5, 52, 0)` / `(5, 156, 70)` / `(5, 261, 100)` and `AvgDailyTot(63) > 1000000` |
+| Line endings | `tr -cd '\r'` on every `.md` / `.py` in `v4`, `v4.1` | **LF everywhere except** the three v3-inherited CRLF files (NEW-3), which match `v4` byte for byte. The eight files converted to CRLF during the 4.1 edits were normalised back |
+| `Beta1Y` ≡ `BetaFunc(5, 52, 0)` and the `min_samples` default | `build/data/details.json` → `BetaFunc` full description | **CONFIRMED** verbatim: "BetaFunc(period, samples[, min_samples=0, offset=0])", "0 means all samples are required", "Beta1Y … equivalent to BetaFunc(5, 52, 0)" |
+
+### Findings
+
+| ID | Severity | Finding | Status |
+|---|---|---|---|
+| NEW-7 | Major | `references/api.md` carries `2026-08-28` and `2026-09-03` as dates of record. Both come from the release brief, **not** from a repo artifact: `buildnotes/api-docs.live.yml` has no capture header and the spec carries no changelog. The operation diff itself is proven by set difference against the older capture; only the two dates are unsourced. They also form the `## Spec Changes (2026-08-28)` heading and its Contents anchor, so changing them is a three-place edit. | **DISCLOSED** - owner to confirm both dates before tagging, or the heading and anchor change with them |
+| NEW-8 | Minor | Two spec-versus-wrapper disagreements are stated as open rather than adjudicated, because the spec and the installed source genuinely disagree and one live call settles each: `POST /rank/create` returns a bare `int32` per the spec while the wrapper decodes an object and reads `id`; `GET /rank` names the XML field `nodes` in the spec while the wrapper's result type declares `xml`. | **ACCEPTED** - disclosed in `api.md` and in CHANGELOG §Known unresolved; this release spent 0 API credits |
+| NEW-9 | Minor | `contains_header_row` defaults to `True` in 3.1.0 against a documented server default of `false`, so a headerless CSV would silently lose its first data row. Derived from the 3.1.0 source, **not** observed live. It is the only 2.x → 3.x change that alters results rather than raising. | **DISCLOSED** - in `api.md`, CHANGELOG §Known unresolved; confirm with one upload when convenient |
+| NEW-11 | Major | **One surviving instance of the corrected momentum mislabel.** `references/misc.md:662` commented `SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)` as "Signed square of **12-1 momentum**", contradicting `technical.md`, `factor-replication.md` and the new eval 21 inside the same tree. | **FIXED** (repair pass, 2026-09-17) - the comment now names the window (252 bars ending 21 bars back, a thirteen-month span) and points at `factor-replication.md`. `grep -rn '12-1' v4.1` now returns only correct uses |
+| NEW-10 | Minor | `build/data/client-methods.json` still records `public_method_count: 38` from the 2026-06-09 extraction, and `build/gate2_checks.py` globs `v3/references` with a hard-coded 15-entry `ALL_FILES` list, so `factor-replication.md` is invisible to Gate 2. Both live outside the v4.1 tree and were **not** modified. The "44 methods" figure in this release therefore rests on the AST enumeration above, not on a repo artifact. | **OPEN** - build-tooling debt, carried forward |
+
+**Whitelist discipline (the NEW-1 precedent, applied to the new file).**
+`references/factor-replication.md`'s `name-whitelist` header lists 21 tokens and **not one of them
+is an invented factor or function name**. They are: ranking-XML attribute and element names
+(`RankType`, `Scope`, `StockFactor`, `StockFormula`, `RankingSystem`, `Composite`, `Factor`,
+`Formula`, `Description`, `Name`, `Weight`), period suffixes used as prose tokens (`Q`, `A`,
+`PYQ`, `PTM`, `RSD%`, `RSD%TTM`, `RSD%ANN`), the vendor name `Compustat`, and the two official
+`BetaFunc`/`PctDev` parameter names `noBars` and `noNAs`. Every trap name the file teaches against
+- `GrossProfitability`, `AccrualsTTM`, `Accruals`, `BeneishM`, `MScore`, `ROIC%TTM`,
+`EarningsYield`, `IdioVol`, `Mom12M`, `AssetGrowth`, `BuybackYield` and the rest - lives only in
+the exempted first column of the Common Mistakes table, where the gate cannot read it as a roster
+of valid names. This is the rule v4.0.0 set in NEW-1: reword rather than whitelist, and never put
+an invented identifier where a model will read it as vocabulary.
+
+**Common Mistakes table, wrong-side column.** Checked against `dictionary-by-code.json`: the
+file's `Wrong (do not use)` column holds **25 names, 0 of which exist in the dictionary**. Gate 2
+check 2.1 (no-contradiction) therefore cannot fail on this file once the gate is re-pointed.
+
+### Repair pass (2026-09-17) - four adversarial verifier audits
+
+Four verifiers audited the finished v4.1 tree (API truth vs. the live spec and the installed
+wrapper; `factor-replication.md` fidelity; regression and collateral damage; the public face -
+README, SKILL.md and CHANGELOG numbers). Twenty-one findings. Every claim was re-derived from
+ground truth before acting; two findings were dismissed as wrong. The repairs applied:
+
+**1. The free-trial licence waiver, three files (major).** `api.md` had already been corrected for
+4.1 - the spec grants the no-licence trial on `POST /data` only - but `README.md`,
+`scripts/README.md` and `scripts/06_data_universe_download.py` still extended it to
+`/data/universe`, the last of them in a script a trial user would run and watch fail. Re-verified
+by parsing both captures: `POST /data`'s description contains "You can try it without a license
+with IBM, MSFT, & INTC and 5Y history"; `/data/universe`'s is byte-identical in the 2026-06 and
+2026-09 captures and contains no such clause. All three narrowed to `POST /data`. The adjacent
+`07_price_history.py` claims (`README.md`, `scripts/README.md`, `SKILL.md` and the script's own
+docstring) were narrowed the same way: `GET /data/prices/{identifier}` carries no licence clause
+either, so "works on the free trial" was never established - the file now says only that IBM is
+one of the three tickers the `POST /data` waiver names.
+
+**2. `technical.md` kept `BetaFunc(52, 104)` as a recommendation (major).** Three other places in
+the same release call it an error (`factor-replication.md`'s Common Mistakes row, `SKILL.md`'s Low
+volatility row, eval 24), and `technical.md` is the authoritative page for the function. The
+example is now `BetaFunc(5, 52, 0)`; the signature entry explains that the first argument is bars
+*per return*, quotes `details.json` on `min_samples` defaulting to "all required", and gives the
+`Beta1Y` / `Beta3Y` / `Beta5Y` equivalents; a Common Mistakes row carries the reversed-argument
+trap. BUILD-STATE listed `technical.md` as a target for this contradiction and never edited it.
+
+**3. NEW-11, `misc.md` (major).** Fixed; see the Findings table.
+
+**4. Eval 18 contradicted eval 22 (major).** Eval 18 was inherited byte-identical from 4.0.0 and
+still required the model to state that the spec defines no `GET` for Data Series and that
+`data_series_info` returns `405` - the exact claim eval 22 was added to refute, and the headline
+correction of this release. A model could not pass both. Its `expected_output` and fourth
+expectation now expect `data_series_info(name=...)` → `DataSeriesInfoResult`; the upload half
+(`data=`, `contains_header_row`, `existing_data`, `date_format`) is unchanged.
+
+**5. Four stale wrapper/spec claims in `api.md` (minor).** Each re-derived from the installed
+3.1.0 source or the live capture: (a) `grep -n ':param file:' client.py` returns **one** hit in
+3.1.0 (line 698, `strategy_transaction_import`) against two in 2.3.0, so "two of the three
+docstrings" was a 2.3.0 number; (b) `data_universe` with `asOfDt` takes `raw_obj = ret` as an
+**alias**, deletes `dt`/`cost`/`quotaRemaining`/`data` out of that same dict, then attaches it
+unconditionally - so `attrs['raw_obj']` exists but is stripped, where `data` and `rank_ranks` take
+`dict(ret)` copies first; (c) `RankingMethod`, run on the venv's Python 3.12, gives `str(m) == '2'`
+and only `repr(m)` shows the member name, because `IntEnum.__str__` became `int.__str__` in 3.11;
+(d) the AI Factor `params` list omitted `universe` and added `pitMethod`, where parsing
+`PredictParams` in **both** captures gives exactly `precision, universe, asOfDt, includeNames,
+includeFeatures, figi` - `universe` restored, `pitMethod` moved to an explicitly-sourced sentence
+attributing it to the live-tested curated reference and stating the spec does not declare it.
+
+**6. Six recipe-level corrections in `factor-replication.md`.** The skip-a-month window was
+attributed to Jegadeesh & Titman (1993), who sort on J-month past returns with the holding period
+starting immediately; the eleven-month window ending a month back is the Fama & French (1996) /
+Carhart (1997) UMD convention. The row and both dependent sentences now name the convention rather
+than JT (1993) as authority. The Novy-Marx recent-momentum leg was `Ret%Chg(105, 21)` (six to one
+month) justified by an invented rule - "the two legs must be the same length" - that is not a
+property of the paper; the paper's recent leg ends **two** months back, so the row is now
+`Ret%Chg(84, 42)` and the rule is replaced by a statement of the actual asymmetry. The scope
+disclosure written for Novy-Marx gross profitability now covers the Fama & French (2015)
+operating-profitability row, which had the same divergence undisclosed. Dollar-volume liquidity
+carried `RankType="Higher"` directly above Amihud illiquidity carrying `RankType="Higher"` -
+monotone opposites, both presented as anomaly directions; it is now a universe rule, not a ranked
+node, and the trap says why. The scope cross-reference claimed the Ranking System XML table holds
+the identical convention when that table splits on P/E and puts leverage under Industry; it now
+names the ambiguity it resolves, adds leverage, and the buyback-yield trap's leverage node gained
+its missing `Scope`. And "**Revision breadth beats revision percentage**" - the only comparative
+performance claim in a file that carries none - is retitled to "is better behaved than", which is
+what the three sentences under it argue.
+
+**7. Line endings (minor).** Eight files had been converted to CRLF during the 4.1 edits
+(`references/api.md`, `scripts/README.md`, `p123_helpers.py`, scripts 02, 03, 06, 07, 08), so
+`diff -ru v4 v4.1` read them as whole-file rewrites - `api.md` alone showed as a 643-line delete
+plus a 1,024-line insert. Normalised back to LF; the whole-tree diff is now 1,832 lines and
+`api.md` shows 120 deletions, which is reviewable. The verifier also claimed NEW-3's three files
+contain no CR bytes; that is wrong -
+`tr -cd '\r'` gives 689 / 5,332 / 3,280 for `estimates.md`, `financials.md` and
+`ratios-statistics.md` in v3, v4 **and** v4.1 alike. NEW-3 stands as written and stays OPEN.
+
+**8. Paperwork counts.** The diff summary above said "1 new file, 9 modified files" against an
+actual 16; `check_names.py` flags 7 *occurrences* of **6** distinct identifiers in
+`scripts/README.md`, so both this file and CHANGELOG said 7 identifiers; `api.md` and
+`factor-replication.md` line counts moved; and CHANGELOG's 4.1.0 entry omitted four real changes
+(the `SKILL.md` momentum row, the `SKILL.md`/`README.md` install line, the eval 15 rewording and
+`07_price_history.py`'s docstring) while leaving scripts 01 and 07 out of its enumeration. All
+corrected.
+
+**Dismissed.** Two findings did not survive re-verification:
+
+- *"NEW-3 names three files that contain no CR bytes at all."* False; measured above. The
+  verifier's own CRLF finding was otherwise correct and was acted on.
+- *"README should drop the banner image and the `docs/` row."* The asset is real on the published
+  repo and the banner is the landing page's first element on a page whose business purpose is
+  client acquisition; deleting it to satisfy a tree listing is the wrong trade. Instead the
+  `docs/` row now says the asset lives on the published repo rather than in this release
+  directory, which is what is actually true, and the owner checklist keeps the pre-push
+  verification. See NEW-12.
+
+### Findings added by the repair pass
+
+| ID | Severity | Finding | Status |
+|---|---|---|---|
+| NEW-12 | Minor | `README.md:3` loads the banner from `https://raw.githubusercontent.com/cmoralesm/P123-Claude-Skill/main/docs/p123-skill.jpg`. Nothing in this repo proves that path exists on `main`; the 3.0.0 published README used the same URL, which is suggestive, not proof. The sibling `p123-mcp` repo moved to a **relative** banner path precisely because the absolute `raw.githubusercontent` form breaks while a repository is private. The `docs/` row in the "What's inside" tree now states the asset is repo-only. | **OPEN** - owner: fetch the raw URL before tagging, or add `docs/p123-skill.jpg` to the tree and reference it relatively |
+| NEW-13 | Major | **Files were written outside `v4.1/` during the build window, in trees the brief marks never-modify.** `buildnotes/pkg/` (21:09) contains `portfolio123.skill`, 206,257 bytes, built from **v4.0.0 content** - its `references/` has 15 files with no `factor-replication.md`, its `api.md` is 643 lines against v4.1's 1038, and its `README.md` is the 4.0.0 text. `buildnotes/release-notes-v4.0.0.md` (21:11) and `build/data/gate2-report.md` (21:22) were written in the same window. This file's "Packaging: `portfolio123.skill` **not** regenerated" line is true of the folder root and silent about the package under `buildnotes/`. A stale 4.0.0 package sitting in the repo can be mistaken for the 4.1.0 one. | **OPEN, not actionable here** - outside `v4.1/`, which is the only tree this pass may modify. Owner: delete or rename `buildnotes/pkg/portfolio123.skill`, decide whether `buildnotes/pkg/` and the refreshed `build/data/gate2-report.md` are wanted, and reconcile the Packaging line with what is on disk |
+
+### Not run for v4.1 (do not assume these are green)
+
+- **Re-extraction / Gate 0**: not re-run. Dictionary and detail pages are the 2026-06-09
+  artifacts. Only the OpenAPI document was re-captured (2026-09-03, by the brief).
+- **`gate2_checks.py`**: still not runnable as-shipped - `REFS` is hardcoded to `v3/references`
+  and `ALL_FILES` is a 15-entry list that predates `factor-replication.md` (NEW-10). Its 2.3 link
+  check was reproduced ad-hoc above; 2.1, 2.2 and 2.4 were **not** re-run.
+- **`quick_validate.py` (skill-creator)**: not run.
+- **Packaging**: `portfolio123.skill` **not** regenerated. The package at the folder root is still
+  the 3.0.0 build.
+- **Live API smoke tests**: none. This release spent **0 API credits**; all formula and identifier
+  validation went through the offline `p123_ref_*` tools. The three open items (NEW-8, NEW-9) are
+  exactly the ones a live call would settle.
+- **`p123api` 2.4.x**: never installed. The migration table is a 2.3.0 → 3.1.0 diff; the 2.4.x
+  line is not documented in 4.1 beyond the historical note that `data_series_info` first appeared
+  there.
+- **The banner image**: `docs/p123-skill.jpg` is referenced by `README.md` but lives in the
+  published GitHub repo, not in this tree. It must exist at that path on `main` when 4.1.0 is
+  pushed, or the landing page shows a broken image.
+
+### Decisions
+
+- **`README.md` was rebuilt on the published 3.0.0 copy**
+  (`buildnotes/README-as-published-on-github-v3.0.0.md`), not on the local `v4/README.md`. The
+  published file carries the banner image and a copy-edit pass that never came back to the tree;
+  the local file carries the accurate 4.0.0 content. Folding the second into the first keeps both.
+  Everything the local file said that is still true survives; every count was re-verified against
+  this tree rather than copied.
+- **Positioning block added at the top of `README.md`**, mirroring the sibling `p123-mcp` repo:
+  banner, License badge, then a blockquote naming the author as a Verified Portfolio123 Coach and
+  Consultant with links to QuantSolvings coaching, consulting, training and contact. The old
+  standalone QuantSolvings attribution paragraph was **merged into it**, not kept alongside, so
+  the page does not say the same thing twice. Only the License badge was added: this repo has no
+  PyPI package and no CI workflow, and a badge for something that does not exist is worse than no
+  badge.
+- **The independence disclaimer now separates author from artifact** - "the **author** is a
+  Verified Portfolio123 Coach and Consultant; **the skill itself** is not affiliated with…" -
+  so the credential and the disclaimer do not read as a contradiction. **Open for the owner**: the
+  programme's exact official name. Nothing in this repo corroborates the credential, and no
+  external source was consulted; the wording follows the `p123-mcp` README verbatim.
+- **The 4.0.0 CHANGELOG entry was not rewritten.** It is the record of what 4.0.0 shipped and was
+  true of the spec it was built against. The one bullet that reads as a standing fact about the
+  API - `data_series_info` / the 405 - gained a "**Superseded by 4.1.0**" marker pointing at the
+  new entry and at `api.md`. Historical counts in the 4.0.0 and 3.0.0 entries (28 paths / 33
+  operations, 38 methods, `p123api` 2.3.0) are left alone for the same reason.
+- **`SKILL.md` front matter description**: edited only where it had become false - "the full REST
+  API (33 operations)" → "(39 operations)". "13 category files" is still correct, because
+  `factor-replication.md` is not a category file (the references directory is 16 files: 13
+  categories plus `api.md`, `ranking-system-xml.md` and `factor-replication.md`). The description
+  already triggers on academic factor replication, so nothing was added for triggering.
+- **`evals/evals.json`**: 6 new evals, ids 19–24, continuing the existing shape. Each is written
+  to fail a 4.0.0-era model specifically: the gross-profitability denominator (4.0.0's SKILL.md
+  offers `GMgn%TTM` as the quality factor), an invented accruals name (`AccrualsTTM` is a
+  documented v1/v2 fabrication and 4.0.0's XML file denied any accruals factor), `GET /dataSeries`
+  (4.0.0 says it does not exist), `Ret%Chg(252, 21)` as 12-1 momentum (4.0.0 says exactly that in
+  two files), `BetaFunc(52, 104)` (4.0.0's own recommendation), and dict indexing into a 3.1.0
+  typed result (4.0.0 documents 2.3.0, where everything is a dict).
+
+### Owner checklist for 4.1.0
+
+- [x] ~~**Fix `references/misc.md:662`** - the last "12-1 momentum" mislabel in the tree (NEW-11).~~
+      Done in the 2026-09-17 repair pass.
+- [ ] **Decide what to do with `buildnotes/pkg/`** - it holds a `portfolio123.skill` built from
+      **4.0.0** content, written during this build window in a tree the brief marks never-modify.
+      Delete it, or rename it so it cannot be mistaken for the 4.1.0 package, and reconcile the
+      "Packaging: not regenerated" line below with what is on disk. Also decide whether the
+      refreshed `build/data/gate2-report.md` is wanted (NEW-13).
+- [ ] **Confirm the two dates** `2026-08-28` (spec revision) and `2026-09-03` (capture) - NEW-7.
+      If either is wrong, fix it in `api.md` (prose, the `## Spec Changes (2026-08-28)` heading
+      and its Contents anchor), `CHANGELOG.md`, `README.md` and `BUILD-STATE.md`.
+- [ ] **Confirm the credential wording** - the official programme name for "Verified Portfolio123
+      Coach and Consultant" as it should appear in `README.md`.
+- [ ] **Verify the banner** (NEW-12): fetch
+      `https://raw.githubusercontent.com/cmoralesm/P123-Claude-Skill/main/docs/p123-skill.jpg`
+      before pushing. If it 404s, add `docs/p123-skill.jpg` to the tree and switch `README.md:3` to
+      a relative path, as the sibling `p123-mcp` repo did. The banner is the landing page's first
+      element on a page written to attract coaching and consulting clients - do not tag with it
+      unverified.
+- [ ] Settle NEW-8 and NEW-9 with three live calls (`rank_create`, `rank_get`, one headerless
+      upload), then promote the three "unresolved" statements in `api.md` to facts.
+- [ ] Re-point `gate2_checks.py` at `v4.1/references`, add `factor-replication.md` to `ALL_FILES`,
+      fix its `github_slug` whitespace collapse (NEW-2), and run 2.1/2.2/2.4 - NEW-10.
+- [ ] Refresh `build/data/client-methods.json` from the installed 3.1.0 source (38 → 44).
+- [ ] Run `quick_validate.py` on `v4.1/`, then repackage `portfolio123.skill` from `v4.1/` staged
+      as `portfolio123/` and re-audit the zip (no `.env`, no `evals/`, no `__pycache__`).
+- [ ] Copy `v4.1/` over the repo root, commit, tag `v4.1.0`, release with notes from CHANGELOG.md
+      covering **both** the 4.1.0 and 4.0.0 entries - 4.0.0 was never published.
+- [ ] Still open from 4.0.0: NEW-6 (live `SetVar` confirmation); from 3.0.0: MIN-2 and
+      MIN-7 / R4.4 sign-offs below.
+
+---
+
 ## v4.0.0 - defect-fix release (2026-07-27)
 
 **No re-extraction, no re-build.** `v4/` started as a byte-for-byte copy of the shipped `v3/`

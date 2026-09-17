@@ -250,7 +250,7 @@ name and is used as-is inside `<Factor>` and `<Formula>` tags.
 
 | Formula | Description |
 |---|---|
-| `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | Accruals to total assets (no pre-built accruals factor exists). |
+| `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | Accruals to total assets. No factor is *named* for accruals, but `MScoreTATA` is the same numerator over `AstTotQ` - see [factor-replication.md](factor-replication.md#earnings-quality-and-distress). |
 | `Eval(NetIncBXor(0,TTM) = NA OR NetIncBXor(0,TTM)=0, 0, OperCashFlTTM/Abs(NetIncBXor(0,TTM)))` | Cash flow quality. |
 
 ### Leverage / Solvency
@@ -344,8 +344,9 @@ exist and take `(offset, type)` arguments.
 ## Worked Example - Penman & Pope
 
 A five-factor ranking system. Note the cash-flow-quality and asset-growth formulas use
-`expression = NA` (not single-argument `IsNA`), and accruals are computed from a formula because
-no pre-built accruals factor exists.
+`expression = NA` (not single-argument `IsNA`), and accruals are computed from a formula because no
+factor is named for accruals - the one pre-built equivalent, `MScoreTATA`, divides the same
+numerator by `AstTotQ` rather than the four-quarter average used here.
 
 ```xml
 <RankingSystem RankType="Higher">
@@ -451,8 +452,8 @@ recorded in the build notes).
 | Wrong (do not use) | Correct | Note |
 |---|---|---|
 | `ROIC%TTM` | `ROI%TTM` | P123 uses ROI, not ROIC, for the pre-built factor. |
-| `Accruals%AstTTM` | `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | No pre-built accruals factor; compute it. |
-| `AccrualsTTM` | `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | Not a valid factor name; compute accruals from a formula. |
+| `Accruals%AstTTM` | `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | No factor carries "accruals" in its name; compute it, or use `MScoreTATA` (same numerator over `AstTotQ`). |
+| `AccrualsTTM` | `(NetIncBXorTTM-OperCashFlTTM)/AstTotTTM` | Not a valid factor name; compute accruals from a formula, or use the Beneish component `MScoreTATA`. |
 | `OpCashFl(0,TTM)` | `OperCashFl(0,TTM)` | The cash-flow function is `OperCashFl`. |
 | `EVToEBITDATTM` | `EV2EBITDATTM` | Correct pre-built name; or use `OpIncBDeprTTM/EV`. |
 | `IntCov%TTM` | `IntCovTTM` | No `%` in the interest-coverage factor name. |

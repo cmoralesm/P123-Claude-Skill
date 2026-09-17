@@ -8,8 +8,9 @@ Wrapper method(s): Client.aifactor_predict(predictor_id, params={}, to_pandas=Tr
 
 API quota note: the OpenAPI spec example shows cost: 1, but the live-tested AI
 Factor reference reports a fixed 20 credits per call regardless of params or
-universe size. This discrepancy is documented in api.md -> AI Factor and is being
-confirmed live by the orchestrator. Always read quotaRemaining from the response.
+universe size. This discrepancy is documented in api.md -> AI Factor and is still
+unresolved. The to_pandas result keeps no raw object, so the quota is read from
+client.cost / client.quotaRemaining (p123api 3.1.0+).
 
 Historical predictions: pass --as-of-dt, which MUST be a Saturday (the server
 rejects any other day with "asOfDt must be a Saturday if specified"). Current
@@ -60,7 +61,7 @@ def main():
     try:
         with make_client() as client:
             frame = client.aifactor_predict(args.predictor_id, params, to_pandas=True)
-            print_quota(frame)
+            print_quota(frame, client)
             # Predictions can be null for ~3-4% of the universe; surface that.
             if "prediction" in frame.columns:
                 null_count = int(frame["prediction"].isna().sum())

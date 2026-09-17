@@ -11,7 +11,7 @@ description: >-
   factor strategies (value, momentum, quality, low volatility) on P123, or pull P123 data
   programmatically (screen_run, screen_backtest, rank_ranks, data_universe, AI Factor
   predictions). Covers all 4,463 factors and 465 functions of the official Factor Reference in
-  13 category files, plus the full REST API (33 operations) and 9 runnable example scripts.
+  13 category files, plus the full REST API (39 operations) and 9 runnable example scripts.
 license: MIT
 ---
 
@@ -50,6 +50,7 @@ Read only what the task needs:
 | Sector/industry classification (RBICS): Sector, IndCode, SubIndustry, sector/industry composites | [references/industry-sector.md](references/industry-sector.md) |
 | ETF taxonomy vocabularies (ETF contexts): asset class, country, region, sector sets | [references/taxonomy.md](references/taxonomy.md) |
 | Math/set/date utilities, InList, GetSeries, macro series IDs (##CPI, FRED mappings), country and universe ID constants, operators | [references/misc.md](references/misc.md) |
+| Replicating a named academic factor (Piotroski F-Score, Novy-Marx gross profitability, Sloan accruals, Beneish M-Score, 12-1 momentum, betting-against-beta, asset growth, net share issuance): exact implementation, node direction and scope, translation traps | [references/factor-replication.md](references/factor-replication.md) |
 | **Generating or editing ranking-system XML** (mandatory read, see below) | [references/ranking-system-xml.md](references/ranking-system-xml.md) |
 | Running the bundled example scripts (setup, env vars, safety model) | [scripts/README.md](scripts/README.md) |
 
@@ -199,17 +200,19 @@ with p123api.Client(api_id='your api id', api_key='your api key') as client:
 ```
 
 Responses carry `cost` and `quotaRemaining` - track them; see api.md → Quotas & Costs.
-For endpoint-by-endpoint docs, the 38-method wrapper map, AI Factor usage (historical `asOfDt`
+For endpoint-by-endpoint docs, the 44-method wrapper map, AI Factor usage (historical `asOfDt`
 must be a Saturday), and known pitfalls (deprecated `includeNodeDetails` → `nodeDetails`,
 upload payloads via `data=`, the per-rule `type` bug), read
 [references/api.md](references/api.md).
 
 ## Runnable examples
 
-`scripts/` contains 9 CLI examples built on `p123_helpers.py` (install: `pip install p123api`).
+`scripts/` contains 9 CLI examples built on `p123_helpers.py` (install:
+`pip install "p123api[pandas]"` - since p123api 3.0 pandas is an extra, not a dependency).
 All are read-only except `09_strategy_rebalance_dryrun.py`, which only mutates with an explicit
 `--execute` flag plus typed confirmation. Start with `01_auth_check.py`, then
-`02_screen_run.py`, `07_price_history.py` (works on the free trial: IBM/MSFT/INTC, 5y history).
+`02_screen_run.py`, `07_price_history.py` (defaults to IBM, one of the three tickers named by the
+spec's `POST /data` licence waiver).
 Full table and safety model: [scripts/README.md](scripts/README.md).
 
 ## Verified factor starting points by style
@@ -217,11 +220,19 @@ Full table and safety model: [scripts/README.md](scripts/README.md).
 | Style | Verified factors/functions |
 |---|---|
 | Value | `PEExclXorTTM`, `Pr2BookQ`, `Pr2SalesTTM`, `Pr2FrCashFlTTM`, `EV2EBITDATTM`, `EarnYield`, `FCFYield` |
-| Momentum | `Ret%Chg(252, 21)`, `Pr52W%Chg`, `Pr52WRel%Chg`, `RSI(14)` |
+| Momentum | `Ret%Chg(252, 21)`, `Ret%Chg(231, 21)` (12-1), `Pr52W%Chg`, `Pr52WRel%Chg`, `RSI(14)` |
 | Quality | `ROE%TTM`, `ROA%TTM`, `GMgn%TTM`, `OpMgn%TTM`, `PiotFScore` |
-| Low volatility | `PctDev(52, 5)`, `BetaFunc(52, 104)` |
+| Low volatility | `TRSD1YD`, `PctDev(52, 5)`, `Beta1Y` (= `BetaFunc(5, 52, 0)`) |
 | Size / liquidity | `MktCap`, `AvgDailyTot(63)` |
 | Growth | `SalesGr%TTM`, `EBITDAGr%TTM`, `CurFYEPSMean` vs `NextFYEPSMean` trends |
+
+These are starting points, not constructions. When the user names a published factor - Piotroski,
+Novy-Marx gross profitability, Sloan accruals, Beneish, 12-1 momentum, betting-against-beta, asset
+growth, net share issuance - read
+[references/factor-replication.md](references/factor-replication.md) first: it gives the exact
+implementation, the node direction and scope, and the traps that silently build a different factor
+(`Ret%Chg(252, 21)` spans thirteen months, not 12-1; a price multiple ranked lower-is-better
+promotes loss-makers to the top).
 
 ## Working rules for this skill
 

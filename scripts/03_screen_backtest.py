@@ -7,10 +7,11 @@ Endpoint(s): POST /screen/backtest, and POST /screen/rolling-backtest with --rol
 Wrapper method(s): Client.screen_backtest(params, to_pandas=True);
                    Client.screen_rolling_backtest(params, to_pandas=True).
 
-API quota note: responses carry cost and quotaRemaining. The to_pandas=True form
-of screen_backtest returns a dict of DataFrames (stats / results / chart) and does
-not preserve the raw cost block, so cost is read from a non-pandas probe is avoided
-here; rely on quotaRemaining shown by other scripts. (See api.md -> Quotas & Costs.)
+API quota note: responses carry cost and quotaRemaining, but the to_pandas=True
+form of screen_backtest returns a dict of DataFrames (stats / results / chart) and
+keeps no raw cost block. Rather than spend a second call to recover it, read
+client.cost / client.quotaRemaining, which p123api 3.1.0 sets on every successful
+request before the DataFrame conversion. (See api.md -> Quotas & Costs.)
 
 Mode: READ-ONLY. Changes no account state.
 
@@ -26,7 +27,7 @@ import sys
 
 import p123api
 
-from p123_helpers import make_client
+from p123_helpers import make_client, print_quota
 
 
 def build_screen(args):
@@ -72,10 +73,12 @@ def main():
         with make_client() as client:
             if args.rolling:
                 frame = client.screen_rolling_backtest(params, to_pandas=True)
+                print_quota(None, client)
                 print("Rolling backtest results:")
                 print(frame.to_string(index=False))
             else:
                 result = client.screen_backtest(params, to_pandas=True)
+                print_quota(None, client)
                 # to_pandas=True returns {'stats': df, 'results': df, 'chart': df}.
                 print("Summary statistics (screen vs benchmark):")
                 print(result["stats"].to_string(index=False))

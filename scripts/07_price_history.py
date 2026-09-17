@@ -1,15 +1,17 @@
 """Download end-of-day price history for one security.
 
 Purpose: fetch OHLCV bars for a ticker or P123 UID over a date range. Defaults to
-IBM, which the spec lists among the free-trial tickers (IBM, MSFT, INTC) usable
-without a data license.
+IBM, one of the three tickers (IBM, MSFT, INTC) named by the spec's licence waiver.
+That waiver is written on POST /data; GET /data/prices/{identifier} carries no
+licence clause either way, so do not assume it is usable without a data license.
 
 Endpoint(s): GET /data/prices/{identifier}.
 Wrapper method(s): Client.data_prices(identifier, start, end, to_pandas=True).
 
-API quota note: the response carries cost and quotaRemaining; this script prints
-them via print_quota (kept on the DataFrame's attrs['raw_obj'] where available;
-the bars themselves are returned under 'prices'). (See api.md -> Quotas & Costs.)
+API quota note: the response carries cost and quotaRemaining, but data_prices'
+to_pandas path returns a bare DataFrame of the 'prices' array and keeps no
+attrs['raw_obj'], so this script does not print them. Read them from client.cost /
+client.quotaRemaining (p123api 3.1.0+). (See api.md -> Quotas & Costs.)
 
 Mode: READ-ONLY. Changes no account state.
 
@@ -30,7 +32,8 @@ from p123_helpers import make_client, save_csv
 def main():
     parser = argparse.ArgumentParser(description="Download EOD price history (read-only).")
     parser.add_argument("--identifier", default="IBM",
-                        help="Ticker or P123 UID (default: IBM, a free-trial ticker).")
+                        help="Ticker or P123 UID (default: IBM, one of the three tickers "
+                             "named by the spec's POST /data licence waiver).")
     parser.add_argument("--start", default="2020-01-01", help="Start date (yyyy-mm-dd).")
     parser.add_argument("--end", default=None,
                         help="End date (yyyy-mm-dd); omit for through-today.")

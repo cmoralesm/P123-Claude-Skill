@@ -1,5 +1,159 @@
 # Changelog
 
+## [4.1.0] - 2026-09-17
+
+First public release since 3.0.0. It ships the 4.0.0 defect fixes, which were finished on
+2026-07-28 but never published, plus this release's own work: a factor-replication reference, and
+a refresh of the API and wrapper documentation after Portfolio123 extended its REST surface on
+2026-08-28 and the `p123api` wrapper went to 3.1.0. No re-extraction: the 2026-06-09 dictionary,
+the factor and function counts and all 9 scripts' call sites are unchanged. Read the 4.0.0 entry
+below as part of this release.
+
+### Added
+- **`references/factor-replication.md`** - the 16th reference file, and the first that answers
+  "build me *this paper's* factor" rather than "what is this name". 35 recipes across Value,
+  Quality and Profitability, Earnings Quality and Distress, Momentum and Revisions, Low Risk,
+  Size and Liquidity, and Investment/Issuance/Payout. Each row gives the economic definition in
+  one line, the P123 implementation (pre-built factor where one exists, otherwise the formula),
+  and the ranking node's `RankType` and `Scope`. Around them: per-family translation traps, a
+  worked Quality-sleeve ranking XML, 7 constructions P123 **cannot** reproduce with the closest
+  honest proxy for each, an 11-row "two real factors, one right answer" table for substitutions
+  that quietly change the factor being built, and a 19-row Common Mistakes table.
+  **No performance figures appear anywhere in the file, by design** - no alphas, no
+  t-statistics, no return magnitudes. This skill exists to stop invented facts, and none of those
+  numbers is verifiable from its sources.
+- **`references/api.md` → `## Spec Changes (2026-08-28)`**: the whole 33 → 39 operation diff in
+  one place - the six new operations with what each is for, plus the same-revision changes that
+  added no path (`preproc` on `POST /data/universe`, the `Currency` enum, `StockFactorParams`
+  losing `description` and gaining `maxDays`/`fhistRange`, `BookTradingSystemParams` gaining
+  `grossExposure`, `AccessToken` moving to `components/parameters`, and every `operationId` being
+  renamed) - and an explicit statement of what the new spec invalidates in 4.0.0.
+- **`references/api.md` → `## Migrating from p123api 2.x`**, plus `### Return types` and
+  `### Keyword-only lookups` under the Wrapper Method Map. The migration table is derived by
+  diffing the installed 2.3.0 and 3.1.0 sources, not from release notes.
+- **SKILL.md**: a routing-table row for `factor-replication.md` and a paragraph under the
+  style table pointing named constructions at it.
+- **6 new evaluation prompts** (`evals/evals.json`, ids 19–24), each written to fail a 4.0.0-era
+  model: gross profitability with the wrong denominator, an invented accruals factor, `GET
+  /dataSeries` declared nonexistent, `Ret%Chg(252, 21)` called 12-1 momentum, `BetaFunc(52, 104)`
+  as a low-volatility node, and dict indexing into a 3.1.0 typed result. 24 total.
+
+### Fixed
+- **`api.md` said there is no `GET /dataSeries`. There is, since 2026-08-28.** 4.0.0 documented
+  the 28-path / 33-operation spec and used the absence of any Data Series read operation to
+  explain a `405 Method Not Allowed` reported from a live account. The lookup now exists, so the
+  absence explains nothing going forward. The passage is corrected in place and says so; the 405
+  observation is kept in Known Pitfalls as history, because it was real against the older surface,
+  and `data_series_info` is now documented as a working keyword-only method
+  (`data_series_info(*, id=None, name=None)`) returning a `DataSeriesInfoResult`. The matching
+  `AccessToken`-under-`components/schemas` quirk is corrected the same way, as a fact about spec
+  copies captured before 2026-08-28.
+- **`SKILL.md` recommended a low-volatility factor that returns NA for almost every stock.**
+  The Low volatility row read `BetaFunc(52, 104)`, which asks for 104 samples of 52-bar returns -
+  about twenty years of history - and `BetaFunc`'s `min_samples` defaults to 0, meaning *all*
+  samples are required. The row is now `TRSD1YD`, `PctDev(52, 5)`, `Beta1Y` (which P123 documents
+  as equivalent to `BetaFunc(5, 52, 0)`).
+- **`ranking-system-xml.md` denied an accruals factor that exists.** Four places said P123 ships
+  no pre-built accruals factor, which `MScoreTATA` contradicts - P123 documents it as
+  `(NetIncBXorTTM - OperCashFlTTM) / AstTotQ`, the standard accruals numerator, carried as the
+  Beneish TATA component. The table note, the Penman & Pope prose and both Known Formula Errors
+  rows now say no factor is *named* for accruals and point at `MScoreTATA`, noting that it divides
+  by `AstTotQ` where the average-assets form divides by `AstTotTTM`.
+- **The momentum window was mislabelled in two reference files.** An example comment in
+  `technical.md` called `Ret%Chg(252, 21)` "12-1 month momentum (skip the most recent month)", and
+  `misc.md`'s `SetVar` example repeated the label. 252 bars ending 21 bars back spans thirteen
+  months, not twelve; the eleven-month formation window is `Ret%Chg(231, 21)`. Both comments now
+  describe what the call computes and point at the 231 form. `SKILL.md`'s Momentum row gained
+  `Ret%Chg(231, 21)` beside the idiom, and eval 15's prompt - which used "12-1 momentum" purely as
+  a label for the `SetVar` exercise - now names the window instead.
+- **The free-trial licence waiver was overstated in four places.** The spec grants a no-licence
+  trial (IBM, MSFT, INTC, 5 years) on `POST /data` **only**. `POST /data/universe` carries no such
+  clause in either the 2026-06 or the 2026-09 capture, and neither does
+  `GET /data/prices/{identifier}`. `README.md`, `scripts/README.md`,
+  `scripts/06_data_universe_download.py` and `SKILL.md` all extended the waiver beyond `POST /data`
+  - 4.0.0 was wrong about this against the spec it was built on too, and `api.md` had already been
+  corrected for 4.1. A reader running the universe example on a trial account would have hit a
+  licence failure.
+- **`technical.md` kept `BetaFunc(52, 104)` as a recommended example** while the rest of the
+  release documented it as an error. It is the skill's authoritative page for `BetaFunc`, so the
+  example is now `BetaFunc(5, 52, 0)` with `Beta1Y` named as the preferred form, the signature
+  entry explains that the first argument is bars *per return* and that `min_samples` defaults to
+  "all required", and a Common Mistakes row carries the reversed-argument trap.
+- **Eval 18 asserted the pre-2026-08-28 Data Series story** that eval 22 was added to refute - that
+  no `GET` operation exists and `data_series_info` returns `405`. Its upload content (`data=`,
+  `contains_header_row`, `existing_data`, `date_format`) is unchanged; the lookup half now expects
+  `data_series_info(name=...)` returning a `DataSeriesInfoResult`.
+- **Four stale or unsourced claims in `api.md`**, all carried over from the 2.3.0 documentation:
+  the `file=`/`data=` pitfall counted two docstrings still saying `:param file:` where 3.1.0 has
+  one (`strategy_transaction_import`; the other two were rewritten Google-style and say `data`);
+  Quotas & Costs said `data_universe` with `asOfDt` keeps no `raw_obj` when it attaches one and
+  deletes `cost`/`quotaRemaining` out of it, because `raw_obj` aliases the response dict instead of
+  copying it; `RankingMethod` was said to print as its member name, which `IntEnum` stopped doing
+  in Python 3.11; and the AI Factor `params` list omitted `universe` (declared on `PredictParams`
+  in both captures) while listing `pitMethod` (declared in neither).
+- **Six recipe-level corrections in `factor-replication.md`.** The skip-a-month formation window
+  is no longer attributed to Jegadeesh & Titman (1993), who sort on J-month returns with no skip;
+  the row and the traps now name Carhart (1997) for the convention. The Novy-Marx recent-momentum
+  leg is `Ret%Chg(84, 42)` (six to two months), not `Ret%Chg(105, 21)`, and the invented rule that
+  the two legs must be equal length is gone. The scope disclosure that was written for gross
+  profitability now covers Fama & French (2015) operating profitability as well. Dollar-volume
+  liquidity is presented as a universe rule rather than as an anomaly ranked `Higher`, which
+  contradicted the Amihud row directly beneath it. The cross-reference to Ranking System XML no
+  longer claims the two scope conventions are identical - it names the P/E ambiguity it resolves
+  and adds leverage. And a bolded "beats" header, the only comparative performance claim in a file
+  that carries none, is retitled to the property the text actually argues.
+
+### Changed
+- **`references/api.md` - 643 to 1040 lines, verified operation by operation against the
+  2026-09-03 spec capture.** All **39 operations** documented (39/39, none missing, none extra)
+  across **32 paths / 9 tags / 111 component schemas**. The Wrapper Method Map is now **44 rows**,
+  one per public `p123api` 3.1.0 method, and 3.1.0 is the first release in which every operation
+  has exactly one wrapper method behind it, so no map row is endpoint-less any more.
+- **Wrapper documentation moved from `p123api` 2.3.0 to 3.1.0**, every signature, default and
+  return type re-read from the installed source. The breaking changes are documented rather than
+  assumed: Python floor 3.10, pandas demoted from a dependency to the `[pandas]` extra and
+  imported lazily, nine methods returning attribute-only typed objects instead of dicts
+  (`res['id']` now raises `TypeError`), `cost`/`quotaRemaining` also exposed as `client.cost` /
+  `client.quotaRemaining`, four keyword-only lookup methods whose id kwarg is `id` rather than
+  `<thing>_id`, `ClientItemNotFoundException` for 404s, and uploads taking `IO[bytes]`.
+- **`scripts/`** - no call site changed, because none of the nine scripts calls a method whose
+  return type changed and no kwarg they pass was renamed. What changed: `p123_helpers.py`'s
+  `print_quota` takes an optional `client` argument and reads `client.cost` /
+  `client.quotaRemaining` as a third source, which is the only source that works for `screen_run`,
+  `screen_backtest`, `aifactor_predict`, `data_prices` and `data_universe` with an `asOfDt` -
+  none of which keeps a usable raw object after the DataFrame conversion. Scripts 02, 03, 06 and
+  08 pass it; 04, 05 and 09 are untouched and still work, since the parameter defaults to `None`.
+  01 is unchanged and 07 changed only in its docstring, which previously claimed to print quota
+  through `print_quota` without ever calling it. Install guidance across the helpers, the scripts,
+  `scripts/README.md`, `SKILL.md` and `README.md` now says `pip install "p123api[pandas]"` and
+  names Python 3.10+.
+- **Line endings normalised.** Eight files picked up CRLF during editing (`references/api.md`,
+  `scripts/README.md`, `p123_helpers.py` and scripts 02, 03, 06, 07, 08), which made them read as
+  whole-file rewrites in a diff. They are back to LF, matching the rest of the tree. The three
+  CRLF files inherited from v3 (`estimates.md`, `financials.md`, `ratios-statistics.md`) are
+  untouched and still CRLF - see BUILD-STATE NEW-3.
+- **Counts refreshed** in `SKILL.md` (front matter 33 → 39 operations; 38 → 44 wrapper methods)
+  and in `README.md` (spec counts, wrapper version and method count, 15 → 16 reference files,
+  eval count). `README.md` is also rebuilt on the copy published at 3.0.0 rather than the local
+  one, so the banner image and the copy-edit pass that never came back to the tree survive, and it
+  now opens with the author's Portfolio123 coaching and consulting credential.
+- `scripts/README.md` gained a `name-whitelist` header listing the 6 genuine API identifiers it
+  names (`check_names.py` flagged 7 occurrences of them at baseline), so it passes the gate like
+  the reference files do. No prose was reworded for it.
+
+### Known unresolved
+Three facts are stated in `api.md` as open rather than adjudicated, because each needs one live
+call to settle and this release spent zero API credits:
+- `POST /rank/create` returns a bare `int32` per the spec, but the wrapper decodes an object and
+  reads `id` off it.
+- `GET /rank` names the XML field `nodes` in the spec; the wrapper's result type declares `xml`.
+- `contains_header_row` now defaults to `True` against a server default of `false`, so a
+  headerless CSV would lose its first data row on 3.1.0. It is the only 2.x → 3.x change that
+  alters results rather than raising, and it has not been observed live.
+
+### Roadmap
+- DataMiner operations reference - still uncovered; carried forward from the v3.1 candidate list.
+
 ## [4.0.0] - 2026-07-27
 
 Correctness release. Four defects found by a practitioner using v3.0.0 against live P123 work
@@ -53,6 +207,9 @@ counts, the API surface and all 9 scripts are unchanged from 3.0.0.
   records as an observation rather than deriving it from the spec. This is a spec-level gap, not
   an account-permission problem. Workaround: persist the `dataSeriesId` returned at creation
   time. Contrast `stock_factor_info`, which works because `GET /stockFactor` *is* in the spec.
+  **Superseded by 4.1.0**: P123 added `GET /dataSeries` on 2026-08-28. The bullet above was true
+  of the spec it was written against and is kept as the record of what 4.0.0 shipped; the current
+  behaviour is in the 4.1.0 entry and in `references/api.md`.
 - **`data_prices` end date.** v3 said `end` "is optional in the wrapper and defaults to today".
   It is typed `Optional[str]` but has **no default value**, so it must be supplied; pass `None`
   explicitly for "through today". Omitting it raises `TypeError: ... missing 1 required

@@ -12,9 +12,11 @@ JSON and converts to a DataFrame when to_pandas=True; to obtain CSV or Parquet
 directly you would call the REST endpoint yourself with the appropriate Accept
 header. (See api.md -> Endpoints by Tag -> Data.)
 
-API quota note: the response carries cost and quotaRemaining; this script prints
-them via print_quota (kept on the DataFrame's attrs['raw_obj']). The free trial
-covers IBM, MSFT, INTC with 5 years of history without a data license.
+API quota note: the response carries cost and quotaRemaining. They survive on the
+DataFrame's attrs['raw_obj'] only without --as-of-dt; with it the wrapper deletes
+them from that same object, so client.cost / client.quotaRemaining (p123api 3.1.0+)
+is the reliable source. No free trial here: the spec's licence waiver (IBM, MSFT,
+INTC, 5Y) covers POST /data only; /data/universe needs a data license.
 
 Mode: READ-ONLY. Changes no account state.
 
@@ -54,7 +56,7 @@ def main():
     try:
         with make_client() as client:
             frame = client.data_universe(params, to_pandas=True)
-            print_quota(frame)
+            print_quota(frame, client)
             print(frame.head(20).to_string(index=False))
             if args.csv:
                 save_csv(frame, args.csv)
