@@ -17,6 +17,8 @@ quotaRemaining p123Uids p123Uid tickers gvkeys ciks figis figi startingUniverse
 includeFeatures updateExisting makeRebalDtCurr content_type column_separator existing_data
 date_format decimal_separator ignore_errors ignore_duplicates contains_header_row
 columnSeparator existingData dateFormat decimalSeparator onError onDuplicates headerRow
+data_series_info header_row on_error on_duplicates update_existing make_rebal_dt_curr
+DataSeriesResult StockFactorResult TypeError
 minRebalTran saveTrans posWeight numPos reconFreq sizingMethod useMargin buyRules sellRules
 dataSeriesId factorId processedTransactions tranId transId orderUid settleDt limitPrice
 mktUid avgShareCost daysHeld benchmarkId rankingSystemId reconPeriod rebalPeriod rebalMode
@@ -48,6 +50,12 @@ verified content-identical to `https://api.portfolio123.com/docs/api-docs.yml`; 
 `p123api` wrapper (version 2.3.0 at build time; install `p123api>=2.2.0`), all 38 public client
 methods; plus curated content re-verified against both. Extracted 2026-06-09.
 
+**Wrapper version drift.** Every signature in this file is verified against 2.3.0. The 2.4.x line
+adds at least one method 2.3.0 lacks (`data_series_info`) with no matching spec operation behind
+it; the upload kwarg names below are reported unchanged in 2.4.2. Anything not in the
+[Wrapper Method Map](#wrapper-method-map) is unverified here - check
+[Known Pitfalls](#known-pitfalls) first.
+
 ## Contents
 
 - [Authentication](#authentication)
@@ -64,6 +72,7 @@ methods; plus curated content re-verified against both. Extracted 2026-06-09.
   - [Universe](#universe)
 - [Wrapper Method Map](#wrapper-method-map)
 - [AI Factor](#ai-factor)
+- [Upload Workflow](#upload-workflow)
 - [Known Pitfalls](#known-pitfalls)
 - [Common Mistakes](#common-mistakes)
 - [See Also](#see-also)
@@ -176,15 +185,38 @@ Response `PricesResult`: `security` (`p123Uid`, `ticker`) and `prices` (OHLCV ba
 
 ### Data Series
 
-**`POST /dataSeries`** - Data Series Create/Update. Wrapper: `data_series_create_update(params)`.
-Body `DataSeriesParams`: required `name`; optional `id` (omit to create), `description`. Returns
-`dataSeriesId`.
+Three operations only. **There is no `GET /dataSeries`** - the spec defines no read or lookup
+operation for this tag, so a data series cannot be found by name or id over the API. See Known
+Pitfalls for `data_series_info` and the reported 405.
 
-**`POST /dataSeries/upload/{id}`** - Upload Data Series. Wrapper: `data_series_upload(series_id, data, ...)`.
-Path `id`. Request body is `text/csv`. Query options (set by wrapper kwargs): `headerRow`,
-`existingData` (`overwrite`/`skip`/`delete`), `dateFormat` (default `yyyy-mm-dd`),
-`decimalSeparator` (`.`/`,`), `onError` (`stop`/`continue`), `onDuplicates` (`stop`/`continue`).
-Mutating.
+**`POST /dataSeries`** - Data Series Create/Update. Wrapper: `data_series_create_update(params)`.
+Body `DataSeriesParams`: required `name`; optional `id` (omit to create, supply it to update),
+`description`. Returns `DataSeriesResult` = `SharedResult` (`cost`, `quotaRemaining`) plus
+`dataSeriesId` - **persist that id**; it is the only handle you will ever get for the series.
+Errors 400/402/403/404/409. Mutating.
+
+**`POST /dataSeries/upload/{id}`** - Upload Data Series. Wrapper:
+`data_series_upload(series_id, data, existing_data=None, date_format=None, decimal_separator=None,
+ignore_errors=None, ignore_duplicates=None, contains_header_row=None)`.
+Path `id`; request body is `text/csv` passed as `data=` (string or file-like). Returns
+`SharedResult`. Mutating.
+
+The wrapper takes **snake_case Python kwargs** and builds the camelCase **HTTP query parameters**
+itself. The two vocabularies are never interchangeable - a camelCase name used as a kwarg raises
+`TypeError`. A kwarg left at `None` is not sent at all, so the server default applies.
+
+| Wrapper kwarg (Python) | Query param (HTTP) | Value | Server default |
+|---|---|---|---|
+| `existing_data` | `existingData` | `'overwrite'` \| `'skip'` \| `'delete'` | `overwrite` |
+| `date_format` | `dateFormat` | `dd`/`mm`/`yyyy`, any separator | `yyyy-mm-dd` |
+| `decimal_separator` | `decimalSeparator` | `'.'` \| `','` | `.` |
+| `ignore_errors` | `onError` | bool → `continue` if true, else `stop` | `stop` |
+| `ignore_duplicates` | `onDuplicates` | bool → `continue` if true, else `stop` | `stop` |
+| `contains_header_row` | `headerRow` | bool | `false` |
+
+There is **no `column_separator` kwarg here** (that one belongs to `stock_factor_upload`), and no
+`header_row`, `on_error` or `on_duplicates` kwarg on any method. Worked example:
+[Upload Workflow](#upload-workflow).
 
 **`DELETE /dataSeries/{id}`** - Data Series Deletion. Wrapper: `data_series_delete(series_id)`.
 Path `id`. Mutating.
@@ -239,8 +271,11 @@ Body `ScreenRollingBacktestParams`: the `ScreenBacktest` shared fields plus `fre
 
 ### Stock Factor
 
-**`GET /stockFactor`** - Stock Factor Info. Wrapper: `stock_factor_info(factor_id=None, name=None)`.
-Query `id` or `name`. Returns `factorId`, `name`, `description`.
+**`GET /stockFactor`** - Stock Factor Info. Wrapper: `stock_factor_info(*, factor_id=None, name=None)`.
+Query `id` or `name`. Returns `factorId`, `name`, `description`. Both wrapper args are
+**keyword-only** - `stock_factor_info(123)` raises `TypeError`. Pass exactly one: if `factor_id` is
+given the wrapper sends `id` and ignores `name`. This lookup works because `GET /stockFactor` is in
+the spec; the Data Series tag has no GET operation at all (see Known Pitfalls).
 
 **`POST /stockFactor`** - Stock Factor Create/Update. Wrapper: `stock_factor_create_update(params)`.
 Body `StockFactorParams`: required `name`; optional `id` (omit to create), `description`. Returns
@@ -252,10 +287,29 @@ Path `id`. Returns `dates`, `tickers`, `values`, `p123Uids`.
 **`DELETE /stockFactor/{id}`** - Stock Factor Deletion. Wrapper: `stock_factor_delete(factor_id)`.
 Path `id`. Mutating.
 
-**`POST /stockFactor/upload/{id}`** - Upload Stock Factor Data. Wrapper: `stock_factor_upload(factor_id, data, ...)`.
-Path `id`. Body `text/csv`. Query options (wrapper kwargs): `columnSeparator`
-(`comma`/`semicolon`/`tab`), `existingData`, `dateFormat`, `decimalSeparator`, `onError`,
-`onDuplicates`. Mutating.
+**`POST /stockFactor/upload/{id}`** - Upload Stock Factor Data. Wrapper:
+`stock_factor_upload(factor_id, data, column_separator=None, existing_data=None, date_format=None,
+decimal_separator=None, ignore_errors=None, ignore_duplicates=None)`.
+Path `id`; body `text/csv` passed as `data=`. Returns `SharedResult`. Mutating. Same
+snake_case-kwarg → camelCase-query translation as `data_series_upload`, with one option added and
+one removed:
+
+| Wrapper kwarg (Python) | Query param (HTTP) | Value | Server default |
+|---|---|---|---|
+| `column_separator` | `columnSeparator` | `'comma'` \| `'semicolon'` \| `'tab'` | `comma` |
+| `existing_data` | `existingData` | `'overwrite'` \| `'skip'` \| `'delete'` | `overwrite` |
+| `date_format` | `dateFormat` | `dd`/`mm`/`yyyy`, any separator | `yyyy-mm-dd` |
+| `decimal_separator` | `decimalSeparator` | `'.'` \| `','` | `.` |
+| `ignore_errors` | `onError` | bool → `continue` if true, else `stop` | `stop` |
+| `ignore_duplicates` | `onDuplicates` | bool → `continue` if true, else `stop` | `stop` |
+
+**Deliberate asymmetry.** `stock_factor_upload` has `column_separator` and **no**
+`contains_header_row`; `data_series_upload` has `contains_header_row` and **no**
+`column_separator`. Neither method takes both, and copying a kwarg list from one to the other
+raises `TypeError`. The spec agrees exactly - `columnSeparator` is a query parameter only on
+`/stockFactor/upload/{id}`, `headerRow` only on `/dataSeries/upload/{id}` - so this is the API's
+shape, not a wrapper omission. Unlike a data series, a stock factor can be re-found later with
+`stock_factor_info(name=...)`.
 
 ### Strategy
 
@@ -286,9 +340,16 @@ Path `id`. Body `BookSimRerunParams`: `assets`, required `startDt`/`endDt`.
 Path `id`; query `start` and `end` (both required dates). Returns `trans` (array of `StrategyTran`).
 
 **`POST /strategy/{id}/transactions`** - Strategy Transaction Import. Wrapper: `strategy_transaction_import(strategy_id, data, content_type='text/csv', update_existing=False, make_rebal_dt_curr=False)`.
-Path `id`. Body `text/csv` or `text/tsv`. Columns in order: date, ticker, type, shares, price,
-commission, notes. Type is one of BUY, SELL, COVER, SHORT, DIV, SPLIT, CASH. Query
-`updateExisting`, `makeRebalDtCurr`. Mutating.
+Path `id`. Body `text/csv` or `text/tsv` passed as `data=`; select the format with
+`content_type='text/tsv'`. Columns in order: date, ticker, type, shares, price, commission, notes.
+Type is one of BUY, SELL, COVER, SHORT, DIV, SPLIT, CASH. Kwarg → query mapping:
+`update_existing` → `updateExisting`, `make_rebal_dt_curr` → `makeRebalDtCurr`; both are bools
+defaulting to `False`, and each is sent as `1` **only when true** (false is omitted, not sent as
+`0`, so `False` is indistinguishable from leaving it out). `content_type` is not a query parameter
+- it sets the `Content-Type` request header, and this is the only body-posting method that sends
+one. This method accepts **none** of the CSV-parsing options: `existing_data`, `date_format`,
+`decimal_separator`, `ignore_errors`, `ignore_duplicates`, `contains_header_row` and
+`column_separator` all raise `TypeError` here. Mutating.
 
 **`DELETE /strategy/{id}/transactions`** - Strategy Transaction Delete. Wrapper: `strategy_transaction_delete(strategy_id, params)`.
 Path `id`. Body is a JSON array of transaction IDs (integers). Mutating.
@@ -326,7 +387,7 @@ time - `public_method_count: 38`). The "to_pandas" column marks the 10 methods t
 | `data_universe(params, to_pandas)` | `POST /data/universe` | yes |
 | `data_prices(identifier, start, end, to_pandas)` | `GET /data/prices/{identifier}` | yes |
 | `data_series_create_update(params)` | `POST /dataSeries` | - |
-| `data_series_upload(series_id, data, ...)` | `POST /dataSeries/upload/{id}` | - |
+| `data_series_upload(series_id, data, existing_data, date_format, decimal_separator, ignore_errors, ignore_duplicates, contains_header_row)` | `POST /dataSeries/upload/{id}` | - |
 | `data_series_delete(series_id)` | `DELETE /dataSeries/{id}` | - |
 | `rank_update(params)` | `POST /rank` | - |
 | `rank_perf(params)` | `POST /rank/performance` | - |
@@ -335,11 +396,11 @@ time - `public_method_count: 38`). The "to_pandas" column marks the 10 methods t
 | `screen_run(params, to_pandas)` | `POST /screen/run` | yes |
 | `screen_backtest(params, to_pandas)` | `POST /screen/backtest` | yes |
 | `screen_rolling_backtest(params, to_pandas)` | `POST /screen/rolling-backtest` | yes |
-| `stock_factor_info(factor_id, name)` | `GET /stockFactor` | - |
+| `stock_factor_info(*, factor_id, name)` | `GET /stockFactor` | - |
 | `stock_factor_create_update(params)` | `POST /stockFactor` | - |
 | `stock_factor_download(factor_id)` | `GET /stockFactor/{id}` | - |
 | `stock_factor_delete(factor_id)` | `DELETE /stockFactor/{id}` | - |
-| `stock_factor_upload(factor_id, data, ...)` | `POST /stockFactor/upload/{id}` | - |
+| `stock_factor_upload(factor_id, data, column_separator, existing_data, date_format, decimal_separator, ignore_errors, ignore_duplicates)` | `POST /stockFactor/upload/{id}` | - |
 | `strategy(strategy_id)` | `GET /strategy/{id}` | - |
 | `strategy_holdings(strategy_id, date, to_pandas)` | `GET /strategy/{id}/holdings` | yes |
 | `strategy_trading_system(strategy_id)` | `GET /strategy/{id}/trading-system` | - |
@@ -348,7 +409,7 @@ time - `public_method_count: 38`). The "to_pandas" column marks the 10 methods t
 | `strategy_rerun(strategy_id, params)` | `POST /strategy/{id}/rerun` | - |
 | `book_rerun(strategy_id, params)` | `POST /strategy/{id}/book-rerun` | - |
 | `strategy_transactions(strategy_id, start, end, to_pandas)` | `GET /strategy/{id}/transactions` | yes |
-| `strategy_transaction_import(strategy_id, data, ...)` | `POST /strategy/{id}/transactions` | - |
+| `strategy_transaction_import(strategy_id, data, content_type, update_existing, make_rebal_dt_curr)` | `POST /strategy/{id}/transactions` | - |
 | `strategy_transaction_delete(strategy_id, params)` | `DELETE /strategy/{id}/transactions` | - |
 | `strategy_rebalance(strategy_id, params)` | `POST /strategy/{id}/rebalance` | - |
 | `strategy_rebalance_commit(strategy_id, params)` | `POST /strategy/{id}/rebalance/commit` | - |
@@ -362,6 +423,14 @@ time - `public_method_count: 38`). The "to_pandas" column marks the 10 methods t
 33 REST operations map to the first 33 rows; the remaining 5 (`get_api_id`, `get_token`,
 `set_timeout`, `set_max_request_retries`, `close`) are local client helpers with no endpoint. The
 context-manager dunders `__enter__`/`__exit__` are not counted as public methods.
+
+Rows list argument **names**, not defaults. Every argument after `data` on the three body-posting
+methods is optional: `None` for the two uploads, `False` for `strategy_transaction_import`. All of
+them are snake_case - none of the camelCase query parameters in this file is ever a kwarg.
+`stock_factor_info` is **keyword-only**: call `stock_factor_info(factor_id=123)` or
+`stock_factor_info(name='My Factor')`, never positionally. This map is generated from 2.3.0;
+`data_series_info` (2.4.x) is deliberately absent because no documented endpoint backs it - see
+Known Pitfalls.
 
 ## AI Factor
 
@@ -412,6 +481,60 @@ percentages - convert to percentiles with `FRank` in formulas. In the formula la
 trained model with `AIFactor(...)` and the walk-forward out-of-sample model with
 `AIFactorValidation(...)` (use the latter for backtests to avoid look-ahead bias).
 
+## Upload Workflow
+
+Create the series, keep the id it returns, then push CSV text. Everything after `data=` is a
+**snake_case Python kwarg**; the camelCase names are what the wrapper writes onto the URL.
+
+```python
+import p123api
+
+CSV = """date,value
+2026-01-02,101.4
+2026-01-09,102.1
+2026-01-16,99.8
+"""
+
+with p123api.Client(api_id='your api id', api_key='your api key') as client:
+    try:
+        # 1. Create. Omit 'id' to create; include it to update an existing series.
+        created = client.data_series_create_update({
+            'name': 'My Diffusion Index',
+            'description': 'Weekly diffusion index, uploaded via API.',
+        })
+        series_id = created['dataSeriesId']   # persist this: no GET /dataSeries exists
+        print('dataSeriesId =', series_id)
+
+        # 2. Upload. snake_case only. ignore_* are INVERTED booleans.
+        result = client.data_series_upload(
+            series_id,
+            data=CSV,                     # not file=
+            contains_header_row=True,     # not headerRow=, not header_row=
+            existing_data='overwrite',    # not existingData=
+            date_format='yyyy-mm-dd',     # not dateFormat=
+            decimal_separator='.',        # not decimalSeparator=
+            ignore_errors=False,          # sends onError=stop
+            ignore_duplicates=False,      # sends onDuplicates=stop
+        )
+        print(result)                     # cost / quotaRemaining
+    except p123api.ClientException as e:
+        print(e)
+```
+
+The URL the wrapper builds from that call, in wrapper parameter order:
+
+```text
+POST /dataSeries/upload/<id>?existingData=overwrite&dateFormat=yyyy-mm-dd&decimalSeparator=.&onError=stop&onDuplicates=stop&headerRow=True
+```
+
+Note `headerRow=True`: `contains_header_row` is the one option the wrapper forwards as a raw Python
+bool, so the literal `True`/`False` goes on the wire rather than `1`/`0`. The wrapper only checks
+`is not None`, so if the server rejects that spelling you can pass the string yourself -
+`contains_header_row='true'` is appended verbatim.
+
+`stock_factor_upload(factor_id, data, ...)` is the same shape with `column_separator=` in place of
+`contains_header_row=`.
+
 ## Known Pitfalls
 
 These are verified spec/wrapper/PR discrepancies. Where the spec and wrapper disagree on a
@@ -425,9 +548,40 @@ parameter name, **the wrapper wins** (it is closer to production).
   or hedged"). Example script `02_screen_run.py` sends rules with no per-rule `type`.
 
 - **`file=` renamed to `data=`.** P123's prose docs describe the upload body parameter as `file`,
-  but the wrapper methods (`data_series_upload`, `stock_factor_upload`,
-  `strategy_transaction_import`) take the payload as **`data=`** (a string or a file-like object).
-  Use `data=`.
+  and two of the three wrapper docstrings still say `:param file:`, but the wrapper methods
+  (`data_series_upload`, `stock_factor_upload`, `strategy_transaction_import`) take the payload as
+  **`data=`** (a string or a file-like object). Use `data=`.
+
+- **Upload options are snake_case in Python, camelCase only on the wire.** The spec's query
+  parameters (`headerRow`, `existingData`, `dateFormat`, `decimalSeparator`, `onError`,
+  `onDuplicates`, `columnSeparator`) are **not** wrapper kwargs. Passing one raises, e.g.
+  `TypeError: Client.data_series_upload() got an unexpected keyword argument 'headerRow'`. The
+  kwargs are `existing_data`, `date_format`, `decimal_separator`, `ignore_errors`,
+  `ignore_duplicates`, `contains_header_row` (data series) plus `column_separator` (stock factor).
+  Three traps inside the trap: (a) the header kwarg is `contains_header_row`, **not** `header_row`;
+  (b) `ignore_errors`/`ignore_duplicates` are **inverted booleans** - `ignore_errors=True` is what
+  sends `onError=continue`, and there is no `on_error`/`on_duplicates` kwarg at all; (c) the two
+  upload methods are **asymmetric** (`contains_header_row` is data-series only,
+  `column_separator` is stock-factor only) and `strategy_transaction_import` shares none of these
+  options. Verified against the installed `p123api` 2.3.0 `client.py`; the same snake_case kwargs
+  are reported in 2.4.2. Full mappings: [Data Series](#data-series),
+  [Stock Factor](#stock-factor); worked example: [Upload Workflow](#upload-workflow).
+
+- **`data_series_info` is backed by no endpoint.** The spec defines exactly three Data Series
+  operations: `POST /dataSeries`, `DELETE /dataSeries/{id}` and `POST /dataSeries/upload/{id}`.
+  There is **no read operation at all** under the Data Series tag - no `GET /dataSeries` and no
+  `GET /dataSeries/{id}` - so the spec supports no lookup of a series by name or id; that much is
+  verifiable against `api-docs.yml`. The method does not exist
+  at all in `p123api` 2.3.0; it appears in the 2.4.x line with no documented endpoint behind it,
+  and it was **reported returning `405 Method Not Allowed` on a live licensed account**. Treat the
+  status code as an observation, not a derivation: which status comes back depends on the URL
+  2.4.x's `data_series_info` builds, and that source is not verifiable against the installed 2.3.0.
+  Whatever the code, the wrapper raises it as `ClientException` (only 401/403 trigger re-auth, so
+  it is never retried), and this is a spec-level gap, **not** an account permission problem - do
+  not chase API privileges or different credentials over it. Contrast `stock_factor_info`, which
+  works because `GET /stockFactor` *is* in the spec. **Workaround:** capture and persist the
+  `dataSeriesId` returned by `data_series_create_update` at creation time; there is no supported
+  way to recover it by name afterwards.
 
 - **Deprecated `includeNodeDetails` → `nodeDetails`.** In `RankRanksParams`, `includeNodeDetails`
   (boolean) is marked `deprecated: true`. Use the `nodeDetails` enum (`composite` | `factor`)
@@ -443,8 +597,10 @@ parameter name, **the wrapper wins** (it is closer to production).
   `components/schemas` (`AccessToken`), not `components/parameters` - tooling that only scans
   `parameters` will miss it.
 
-- **`data_prices` end date.** `end` is optional in the wrapper (`Optional[str]`) and defaults to
-  today server-side; pass `None` to mean "through today".
+- **`data_prices` end date.** `end` is typed `Optional[str]` but has **no default value** in the
+  wrapper signature, so it must be supplied; pass `None` explicitly to mean "through today" (the
+  server defaults to today). Omitting the argument raises
+  `TypeError: ... missing 1 required positional argument: 'end'`.
 
 - **`screen` type casing.** The spec enum for screen/universe `type` is `Stock` / `ETF`
   (capitalized), but the official README example sends `'type': 'stock'` (lowercase) and it works.
@@ -469,6 +625,11 @@ multi-region - `PRIMARYNOAM`, `PRIMARYNOAT`, `TRADEEUR`, `TRADENOAM`, `TRADENOAT
 | `includeNodeDetails` | `nodeDetails` | `includeNodeDetails` is deprecated in `RankRanksParams`; use the `nodeDetails` enum (`composite`/`factor`). |
 | `file=` (upload kwarg) | `data=` | The wrapper's upload/import methods take the payload as `data=`, not `file=`. |
 | per-rule `'type'` on a long-only screen | omit the rule `type` | For `method: 'long'`, rules must not include a per-rule `type`; it is only valid for `long/short`/`hedged` (issue #5 / PR #6). |
+| `headerRow=`, `existingData=`, `dateFormat=`, `decimalSeparator=`, `onError=`, `onDuplicates=`, `columnSeparator=` as Python kwargs | `contains_header_row=`, `existing_data=`, `date_format=`, `decimal_separator=`, `ignore_errors=`, `ignore_duplicates=`, `column_separator=` | camelCase names are HTTP query parameters the wrapper builds itself; used as kwargs they raise `TypeError: ... got an unexpected keyword argument`. |
+| `header_row=True` | `contains_header_row=True` | The kwarg is `contains_header_row`; `header_row` does not exist on any method. |
+| `on_error='continue'` / `on_duplicates='continue'` | `ignore_errors=True` / `ignore_duplicates=True` | No `on_error`/`on_duplicates` kwarg exists. The wrapper derives `onError`/`onDuplicates` = `continue`/`stop` from those **inverted** booleans. |
+| `column_separator=` on `data_series_upload`, or `contains_header_row=` on `stock_factor_upload` | use the option the method actually has | `column_separator` exists only on `stock_factor_upload`, `contains_header_row` only on `data_series_upload` - the spec's query parameters split the same way. |
+| `data_series_info(...)` to look a series up by name | persist the `dataSeriesId` returned by `data_series_create_update` | There is no `GET /dataSeries` in the spec, so nothing supports the lookup (reported to 405); the method is absent from `p123api` 2.3.0 entirely. |
 
 ## See Also
 

@@ -14,6 +14,7 @@ also appear in the category references ([Financials](financials.md),
 
 - [Critical rules](#critical-rules)
 - [Tag Reference](#tag-reference)
+- [Weights](#weights)
 - [Scope: Industry vs. Universe](#scope-industry-vs-universe)
 - [RankType Direction Quick Reference](#ranktype-direction-quick-reference)
 - [Verified Factor Names](#verified-factor-names)
@@ -34,6 +35,9 @@ also appear in the category references ([Financials](financials.md),
 - Use `<StockFactor>` / `<Factor>` for pre-built P123 factors.
 - Use `<StockFormula>` / `<Formula>` for custom formula expressions.
 - Use `<IndFactor>` / `<Factor>` for industry-level factors.
+- `Weight="0"` and an omitted `Weight` are legal: `0` means "equal weight", not "node disabled".
+  When every child of a node carries zero (or no) weight, that node's weight is split evenly among
+  them. Never flag this as an error or rewrite it - see [Weights](#weights).
 - Test for missing data with `expression = NA` inside a formula - `IsNA` is a two-argument
   replacement function, not a single-argument boolean (see
   [Known Formula Errors](#known-formula-errors-to-avoid)).
@@ -61,7 +65,7 @@ Groups child nodes into a weighted composite; composites may nest.
 | Attribute | Values | Notes |
 |---|---|---|
 | `Name` | any string | Display name in the P123 UI. |
-| `Weight` | number | Relative weight within the parent; need not sum to 100 (P123 normalizes). |
+| `Weight` | number | Relative weight within the parent; need not sum to 100 (P123 normalizes). Optional; `0` or omitted is legal and does not disable the node - see [Weights](#weights) for the split rules. |
 | `RankType` | `Higher` / `Lower` | Higher = higher values rank better; Lower = lower values rank better. |
 
 ```xml
@@ -76,7 +80,7 @@ Leaf node using a pre-built P123 factor (no formula expression).
 
 | Attribute | Values | Notes |
 |---|---|---|
-| `Weight` | number | Relative weight within the parent composite. |
+| `Weight` | number | Relative weight within the parent composite. Optional; `0` or omitted is legal and does not disable the node - see [Weights](#weights) for the split rules. |
 | `RankType` | `Higher` / `Lower` | Direction for this factor. |
 | `Scope` | `Universe` / `Industry` / `Sector` / `SubIndustry` | Cross-sectional ranking scope. |
 
@@ -94,7 +98,7 @@ Leaf node using a custom formula expression.
 
 | Attribute | Values | Notes |
 |---|---|---|
-| `Weight` | number | Relative weight within the parent composite. |
+| `Weight` | number | Relative weight within the parent composite. Optional; `0` or omitted is legal and does not disable the node - see [Weights](#weights) for the split rules. |
 | `RankType` | `Higher` / `Lower` | Direction for this formula. |
 | `Name` | any string | Display name in the P123 UI. |
 | `Description` | any string | Optional; may be `""`. |
@@ -117,6 +121,43 @@ Leaf node for industry-level factors (industry momentum, etc.).
   <Factor>Pr52W%ChgInd</Factor>
 </IndFactor>
 ```
+
+---
+
+## Weights
+
+**`Weight="0"` and an omitted `Weight` are legal - never "correct" them.** P123 documents the
+ranking-node weight as `[0] - 100 where 0 indicates equal weight`, with `0` as the documented
+default when no weight is supplied. Zero does not disable a node.
+
+| Sibling weights | Effective split |
+|---|---|
+| All positive | Each child's weight as a share of the siblings' total. |
+| All `0`, or all omitted | Even - each child takes `1/n` of the parent's weight. |
+| Mixed `0` and positive | Legal input. The resulting split is undocumented - do not assert one, and do not flag or rewrite it. |
+
+```xml
+<!-- No child carries a positive weight, so the composite's 30 points split four ways. -->
+<Composite Name="Quality" Weight="30" RankType="Higher">
+  <StockFactor Weight="0" RankType="Higher" Scope="Industry">
+    <Factor>ROE%TTM</Factor>
+  </StockFactor>
+  <StockFactor Weight="0" RankType="Higher" Scope="Industry">
+    <Factor>OpMgn%TTM</Factor>
+  </StockFactor>
+  <StockFactor Weight="0" RankType="Higher" Scope="Industry">
+    <Factor>GMgn%TTM</Factor>
+  </StockFactor>
+  <StockFactor Weight="0" RankType="Lower" Scope="Industry">
+    <Factor>DbtTot2CapQ</Factor>
+  </StockFactor>
+</Composite>
+```
+
+Each leaf above gets 25% of the Quality composite, i.e. 7.5 of its 30 weight points. Deleting the
+four `Weight="0"` attributes produces the same system, and so does rewriting them as `Weight="25"`
+- that rewrite is cosmetic, so make it only when asked. When writing new XML, set an explicit
+`Weight` on every node; when reading a user's XML, treat a missing `Weight` as `0`.
 
 ---
 
@@ -175,6 +216,7 @@ name and is used as-is inside `<Factor>` and `<Formula>` tags.
 | `Pr2SalesTTM` | Price to sales, TTM. |
 | `EV2SalesTTM` | EV to sales, TTM. |
 | `EV2EBITDATTM` | EV/EBITDA, TTM (pre-built); or use `OpIncBDeprTTM/EV` in a formula node. |
+| `EarnYield` | Earnings yield, TTM (pre-built, `RankType="Higher"`), `100 * EPSExclXorTTM / Price`. Losses give a negative yield instead of the NA that `1/PEExclXorTTM` can produce. |
 
 ### Valuation (formula expressions for `<StockFormula>`)
 
@@ -414,7 +456,8 @@ recorded in the build notes).
 | `OpCashFl(0,TTM)` | `OperCashFl(0,TTM)` | The cash-flow function is `OperCashFl`. |
 | `EVToEBITDATTM` | `EV2EBITDATTM` | Correct pre-built name; or use `OpIncBDeprTTM/EV`. |
 | `IntCov%TTM` | `IntCovTTM` | No `%` in the interest-coverage factor name. |
-| `EarnYield%TTM` | `1/PEExclXorTTM` | No pre-built earnings-yield factor. |
+| `EarnYield%TTM` | `EarnYield` | Yields are current-price figures and take no period suffix. `EarnYield` is `100 * EPSExclXorTTM / Price`; the `1/PEExclXorTTM` formula node is the same idea but inherits P/E's NA behaviour on losses. |
+| `Sqrt(MktCap)` | `MktCap^0.5` | No square-root function exists; `^` is the power operator (`x^(1/n)` for an n-th root). |
 | `<SNode>` | `<Composite>` | Wrong tag; causes a root-node error. |
 | `<RankPerformance>` | (omit entirely) | Not part of this schema. |
 | `IsNA(NetIncBXor(0,TTM))` | `NetIncBXor(0,TTM) = NA` | `IsNA` is a two-argument replacement function; test for NA with `= NA`. |

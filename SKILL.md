@@ -56,8 +56,19 @@ Read only what the task needs:
 ## Formula language essentials
 
 ```p123
-// Variables: set once, reuse; @var:expr also displays the value in screen reports
-SetVar(@cheap, PEExclXorTTM < 15)
+// Variables: SetVar ALWAYS returns TRUE (1), never the assigned value
+SetVar(@cheap, PEExclXorTTM < 15)   // own rule, then reuse @cheap in later rules
+// Returning 1 is what lets a definition be chained into the formula that uses it -
+// the only option where there is no next rule (ranking nodes, API formulas):
+SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)   // 1 * @r * Abs(@r) == @r * Abs(@r)
+// A bare SetVar sell rule always fires the sell - negate it: !SetVar(@x, ...).
+// @var:expr differs - it RETURNS the value (may be 0/NA) and adds a report column:
+MktCap > @med:FMedian("MktCap")
+
+// Math: + - * / and ^ (power). ^ outranks every other operator, so 2*x^3 is 2*(x^3).
+// x^y and Pow(x, y) are the same operation - write x^y. There is NO Sqrt: a square
+// root is x^0.5, an n-th root x^(1/n) (parens required, since x^1/3 means (x^1)/3).
+MktCap^0.5                          // square root of market cap; NOT Sqrt(MktCap)
 
 // Conditional: Eval(condition, value_if_true, value_if_false)
 Eval(PEExclXorTTM = NA, Pr2SalesTTM < 2, PEExclXorTTM < 20)
@@ -111,6 +122,7 @@ per-category tables live in each reference file's Common Mistakes section):
 |---|---|---|
 | `IsNA(x)` as boolean | `x = NA` | `IsNA(expr1, expr2)` is two-argument replacement |
 | `Eval(IsNA(x), a, b)` | `Eval(x = NA, a, b)` | same trap inside Eval |
+| `Eval(SetVar(@x, f), A, NA)` | `SetVar(@x, f) * A` | `SetVar` returns TRUE; the `NA` branch is dead code |
 | `PiotroskiF` | `PiotFScore` | Piotroski F-Score |
 | `EstEPSCY` / `EstEPSCQ` | `CurFYEPSMean` / `CurQEPSMean` | legacy Est... estimate family does not exist |
 | `Revenue` | `Sales` | revenue line item |
@@ -129,7 +141,9 @@ per-category tables live in each reference file's Common Mistakes section):
 | `SectorCount` | `SecCount` | sector position count |
 | `UnivCount` | `UnivCnt` | universe count |
 | `BenchmarkClose` | `BenchClose` | benchmark close |
-| `Average` / `Power` / `Ln` | `Avg` / `Pow` / `LN` | math function spellings |
+| `Average` / `Ln` | `Avg` / `LN` | math function spellings |
+| `Power` / `Pow(x, y)` | `x^y` | `^` is the power operator; `Pow` is the verbose equivalent |
+| `Sqrt(x)` / `Exp(x)` | `x^0.5` / `2.718281828^x` | no root or exp function; `^` is the power operator |
 | `PlusDI` / `MinusDI` | `DMIPlus` / `DMIMinus` | directional indicators |
 | `IndustryCode` | `IndCode` | classification factor |
 
@@ -140,7 +154,10 @@ When unsure about any name, grep the relevant reference file before writing it.
 **ALWAYS read [references/ranking-system-xml.md](references/ranking-system-xml.md) before
 generating or editing any ranking-system XML.** The correct schema is NOT guessable, and
 earlier versions of this skill shipped a broken one. That file contains the validated schema,
-RankType direction guidance, a worked Penman & Pope example, and a known-formula-errors table.
+RankType direction guidance, node-weight semantics (including when `Weight="0"` is legal), a
+worked Penman & Pope example, and a known-formula-errors table. In particular: `Weight="0"` and an
+omitted `Weight` on a ranking node are legal, never an error to fix - read that file for how the
+weight is then split.
 
 ## API quick start
 
@@ -221,4 +238,6 @@ Full table and safety model: [scripts/README.md](scripts/README.md).
 
 ---
 
-Developed and maintained by [Quant Solvings](https://quantsolvings.com), a quantitative research practice in factor investing for equities.
+Developed and maintained by [Quant Solvings](https://quantsolvings.com), a boutique quantitative
+practice in factor investing for equities, run by Carlos Morales, a Verified Portfolio123 Coach
+and Consultant.

@@ -422,7 +422,11 @@ Universe(SP500)
 ## Math
 
 Scalar math functions and NA/negative/zero replacement helpers. Most math
-functions return NA when any input is NA.
+functions return NA when any input is NA. Powers and roots are written with
+the `^` operator - `x^0.5` is a square root, `x^(1/n)` an n-th root - and
+`Pow(x, y)` is the verbose equivalent of `x^y`. P123 has no square-root
+function and no exponential function; see
+[Common Mistakes](#common-mistakes) for the names that get invented.
 
 ### Functions
 
@@ -449,7 +453,33 @@ Returns the natural logarithm of `val`.
 Changes the sign of the expression (for example `Negate(5)` returns -5).
 
 #### `Pow(number, power)`
-Returns `number` raised to `power`.
+Returns `number` raised to `power`. Prefer the `^` operator: `x^y` and
+`Pow(x, y)` are the same operation, and `x^y` is shorter and nests better.
+Reach for `Pow` only when the expression is generated programmatically. NA
+propagates as it does for every math function: if `number` or `power` is NA the
+result is NA, so guard a possibly-missing base with `IsNA(x, fallback)`.
+
+P123 has no square-root function - `x^0.5` is the only way to write a square
+root and `x^(1/n)` the only way to write an n-th root. There is no exponential
+function and no `e` constant either; `LN(val)` and `Log10(val)` are the only
+logarithms.
+
+```p123
+MktCap^0.5                        // square root; Pow(MktCap, 0.5) is verbose
+MktCap^(1/3)                      // n-th root; parentheses required
+(PEExclXorTTM * Pr2SalesTTM)^0.5  // geometric mean of two multiples
+// Sign-preserving power: no Sign function - flip the sign with Negate
+Eval(EarnYield >= 0, Abs(EarnYield)^0.5, Negate(Abs(EarnYield)^0.5))
+```
+
+`^` has the highest precedence of any operator (see
+[Math operators](#math-operators)), so `2 * MktCap^0.5` is `2 * (MktCap^0.5)`,
+`x^1/3` is `(x^1)/3`, and `@v:MktCap^0.5` sets `@v` to `MktCap^0.5`. The
+reference documents `^` only as "x raised to the power of y"; it says nothing
+about how a leading minus sign binds to it, nor whether a chained `a^b^c`
+associates left or right, so write `(-x)^2` and `(a^b)^c` explicitly rather
+than guess. A negative base with a fractional exponent is likewise
+undocumented - use the sign-preserving form above.
 
 #### `Trunc(val)`
 Rounds `val` toward zero.
@@ -616,11 +646,75 @@ trading day). In multi-country regions the country code must be supplied.
 Intended for strategies, not screens or ranking systems.
 
 #### `SetVar(@myvar, expression)`
-Sets the variable `@myvar` to the expression and returns true. The variable can
-then be used in subsequent rules.
+Defines `@myvar` and sets it to the value of `expression`. `SetVar` always
+returns TRUE (1); it never returns the assigned value. The official reference
+documents the variable as readable **in every subsequent rule** - that is the
+form its own example uses, and the form to prefer wherever a rule list is
+available (see below).
+
+Because the return value is the constant 1, the definition can also be chained
+into the formula that consumes it: 1 is the identity element for `*`, and a
+TRUE left operand of `and` leaves the truth value of the right operand
+unchanged. This inline form is the only option in single-formula contexts
+(ranking-system nodes, API `formulas` entries), where there is no "next rule".
+
+```p123
+// Signed square of 12-1 momentum, definition inlined
+SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)
+// Boolean form
+SetVar(@r, Ret%Chg(252, 21)) and @r > 10
+```
+
+The reduction, step by step: `SetVar(@r, ...)` returns 1, so the first
+expression is `1 * @r * Abs(@r)`, which is `@r * Abs(@r)`.
+
+Provenance caveat: the reduction above follows from the documented return
+value, but the official reference only ever states that a variable is visible
+in *subsequent rules* - it does not say that `@r` is readable to the right of
+its own `SetVar` call in the same expression, and every official example
+defines in one rule and reads in the next. Same-expression visibility is
+nonetheless not a new dependency introduced by inlining: the older
+`Eval(SetVar(@r, f), @r * Abs(@r), NA)` idiom reads `@r` inside the same
+formula too, and that form is in working practitioner use - so inlining trades
+no correctness for its brevity, and reverting to the `Eval` wrapper buys
+nothing back. Prefer the documented two-rule form when a rule list exists;
+inline when there is no next rule.
+
+Do not wrap `SetVar` in `Eval`. In `Eval(SetVar(@r, f), @r * Abs(@r), NA)` the
+condition is TRUE for every stock, so the third argument is unreachable dead
+code - it performs no NA handling - and the call reduces to that same
+`@r * Abs(@r)`. Write the inline form instead. (The `Eval` wrapper is
+load-bearing around `LinReg`, which returns FALSE when the regression fails -
+see [advanced-functions.md](advanced-functions.md#loop-regression).)
+
+Official example - define in one rule, test in the next; no screen-report
+column is created:
+
+```p123
+SetVar(@1wkRet, Ret%Chg(5))
+@1wkRet > 10
+```
+
+Sell rules: a bare `SetVar` rule always evaluates TRUE and therefore always
+sells, so negate it to define a variable without selling, `!SetVar(@x, 1 + 2)`.
+When `SetVar` is chained into a larger expression the value of that expression
+governs instead - and in a sell rule a value strictly between 0 and 1 sells
+that fraction of the position. In buy and screen rules the constant TRUE is
+harmless: it screens nothing out.
+
+The `:` operator is not interchangeable. `@myvar:expression` returns the value
+of the expression, which may be 0 or NA, and adds an `@myvar` column to the
+screen report; `SetVar` returns TRUE and adds no column - see
+[Show/Set Variable operator](#showset-variable-operator). `ShowVar` returns
+TRUE like `SetVar` and inlines the same way, but does add the column - see
+[advanced-functions.md](advanced-functions.md#screener-only).
 
 #### `Eval(condition, expr1, expr2)`
-Evaluates `expr1` if `condition` is non-zero, otherwise evaluates `expr2`.
+Evaluates `expr1` if `condition` is non-zero, otherwise evaluates `expr2`. The
+condition must be able to be false. `SetVar` and `ShowVar` always return TRUE,
+so `Eval(SetVar(@x, f), A, NA)` always yields its second argument, the `NA`
+branch is dead code, and the whole call collapses to `SetVar(@x, f) * A` - see
+[`SetVar`](#setvarmyvar-expression).
 
 #### `GetSeries("ticker/series")`
 Returns a series ID for use in functions that take a `series` parameter. You can
@@ -1058,6 +1152,18 @@ not counted as functions or factors.
 | / | Divide |
 | ^ | Power (x^y is x raised to the power of y) |
 
+`^` is the highest-precedence operator in the language. The official `SetVar` /
+`ShowVar` description says the `:` variable operator "is lower in precedence
+only to the power operator, `^`" - so `:` outranks `+ - * /` and `^` outranks
+everything. Concretely, `2 * x^3` is `2 * (x^3)`, `x^2 + 1` is `(x^2) + 1`, and
+`@v:x^2` sets `@v` to `x^2`.
+
+Write `x^y` in preference to `Pow(x, y)`; they are the same operation. `x^0.5`
+is a square root (P123 has no square-root function) and `x^(1/n)` an n-th
+root. How a leading minus sign binds to `^`, and whether `a^b^c` associates
+left or right, are not documented - parenthesize instead of guessing:
+`(-x)^2`, `(a^b)^c`.
+
 ### Precedence operators
 
 Use parentheses `( )` to change the order in which operations are calculated.
@@ -1072,7 +1178,14 @@ When in doubt, use parentheses.
 ### Show/Set Variable operator
 
 The `:` operator: the rule `@myvar:expression` sets the variable `@myvar` to the
-expression, returns the expression, and displays `@myvar` in the screen report.
+expression, returns the value of the expression (which may be 0 or NA), and
+displays `@myvar` in the screen report. Unlike `SetVar`, which always returns
+TRUE, this operator returns the value.
+
+Precedence: the operator binds to the nearest element on its right, or to the
+contents of parentheses if used, and only `^` binds tighter. So
+`@r:Close(0)/Close(5)` assigns just `Close(0)` to `@r`, while `@r:a^2` assigns
+`a^2`. Parenthesize to capture a whole formula: `@r:(Close(0)/Close(5))`.
 
 ## Common Mistakes
 
@@ -1080,8 +1193,13 @@ expression, returns the expression, and displays `@myvar` in the screen report.
 |---|---|---|
 | `IsNull` | `IsNA` | The NA-replacement function is `IsNA(expr1, expr2)`. |
 | `Average` | `Avg` | The set-average function is abbreviated `Avg`. |
-| `Power` | `Pow` | The power function is `Pow(number, power)`; the caret is the power operator. |
+| `Power` | `x^y` | Not a name in the dictionary. Write powers with the `^` operator; `Pow(number, power)` is the verbose equivalent of the same operation. |
+| `Sqrt(x)` | `x^0.5` | P123 has no square-root function; `^` is the only way to take a root (`x^(1/n)` for an n-th root). |
+| `Exp(x)` | `2.718281828^x` | There is no exponential function and no `e` constant; `LN` and `Log10` are the only logarithms. |
 | `Ln` | `LN` | The natural-log function is uppercase `LN`. |
+| `Eval(SetVar(@x, f), A, NA)` | `SetVar(@x, f) * A` | `SetVar` returns TRUE, so the `NA` branch is dead code. |
+| `SetVar(@x, f) > 10` | `SetVar(@x, f)` then `@x > 10` | `SetVar` returns TRUE (1), not `f`; this tests `1 > 10`. |
+| bare `SetVar(...)` as a sell rule | `!SetVar(...)` | `SetVar` returns TRUE, so the sell always fires. |
 
 ## FRED Mapping Note
 

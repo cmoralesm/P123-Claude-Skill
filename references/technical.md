@@ -690,8 +690,15 @@ A Sortino-like ratio (not adjusted for the risk-free return). `range` is the tot
 ```p123
 // Custom beta: 52-week window, 104 weekly samples
 BetaFunc(52, 104)
-// Annualized 12-month volatility from weekly moves
+// SD of 52 weekly % moves; annualize is the 5th argument, not passed here
 PctDev(52, 5)
+// Same window, annualized by P123 - prefer this form
+PctDev(52, 5, 0, 0, TRUE)
+// Manual annualization: multiply an SD by the sqrt of periods per year.
+// There is no Sqrt function - use the ^ operator. Approximate: the reference
+// derives periods/year from the bar count off a 251-day year (21 bars -> sqrt(12),
+// 1 bar -> sqrt(251)); it gives no multiplier for 5-bar periods, so 52 is a guess.
+PctDev(52, 5) * 52^0.5
 ```
 
 ### Factors
@@ -749,6 +756,7 @@ Annualized standard deviation of total return.
 | `LoValue(...)` | `LowVal(...)` | The lowest-value function is `LowVal`. |
 | `HiBar(...)` | `HighValBar(...)` | The bar-of-high function is `HighValBar`. |
 | `LoBar(...)` | `LowValBar(...)` | The bar-of-low function is `LowValBar`. |
+| `Sqrt(x)` | `x^0.5` | There is no square-root function; `^` is the power operator (see [Misc](misc.md)). |
 
 ---
 

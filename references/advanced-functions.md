@@ -273,6 +273,8 @@ LoopSum("Close(CTR) > Close(CTR + 1)", 10)
 LoopSum("IncAftTax(CTR, QTR) > IncAftTax(CTR + 1, QTR)", 10) >= 8
 // Closed higher than the previous day for more than 10 days in a row
 LoopStreak("Close(CTR)", 21, 0, 1, #Increasing, TRUE) > 10
+// 5-year compound annual sales growth, as a fraction: 5th root via ^
+LoopProd("Sales(CTR, ANN) / Sales(CTR + 1, ANN)", 5)^(1/5) - 1
 ```
 
 ---
@@ -300,6 +302,11 @@ R2 > 0.8 and Slope > 0 and SurpriseY(0) > 0
 // Rank on the slope of the past 60 prices when the regression succeeds
 Eval(LinReg("Close(CTR)", 60), Slope, NA)
 ```
+
+The `Eval` wrapper is load-bearing here, unlike around `SetVar` / `ShowVar`: `LinReg` returns
+FALSE when the regression cannot be completed, so the third argument is reachable. The official
+reference defines the prebuilt smoothed factors exactly this way - `SalesRegEstTTM` equals
+`Eval(LinReg("Sales(CTR, TTM)", 10, 0, 2), EstimateY(0), NA)`. Do not "simplify" it.
 
 Regression statistics available after a successful regression: `Slope`, `SlopeConf%`,
 `SlopePVal`, `SlopeSE`, `SlopeTStat`, `R`, `R2`, `Intercept`, `InterceptSE`, `SE`, `Samples`,
@@ -433,8 +440,22 @@ Produces a correlation matrix in the screen report.
 
 #### `ShowVar(@myvar, expression)`
 
-Sets the variable `@myvar` to `expression`, returns TRUE, and displays `@myvar` in the screen
-report. (`SetVar` itself lives in [Misc](misc.md).)
+Defines `@myvar`, sets it to `expression`, and adds an `@myvar` column to the screen report.
+Like `SetVar`, **`ShowVar` always returns TRUE (1) - it does not return the assigned value**,
+so the same inlining applies: multiply the call into the formula that consumes the variable
+rather than wrapping it in `Eval`.
+
+```p123
+// ShowVar returns 1, so this is 1 * @r * Abs(@r), which is @r * Abs(@r)
+ShowVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)
+// Wrong: the condition is TRUE for every stock, so the NA branch is dead code
+Eval(ShowVar(@r, Ret%Chg(252, 21)), @r * Abs(@r), NA)
+```
+
+`ShowVar` is screener-only; use `SetVar` elsewhere, and the `:` operator when the expression's
+value is wanted instead of TRUE. Full semantics, the sell-rule negation caveat, the provenance
+caveat on same-formula reuse, and the `SetVar` vs. `:` contrast are in
+[Misc](misc.md#setvarmyvar-expression).
 
 ### Factors
 
@@ -545,6 +566,7 @@ Bars since the position was last closed; -1 if currently held; NA otherwise.
 | `OtherRank("name")` | `Rating("name")` | Cross-system rank is `Rating` / `RatingPos`. |
 | `SectorCount` | `SecCount` | The sector running count is `SecCount`. |
 | `RegEst(0)` | `EstimateY(0)` | The regression Y-estimate function is `EstimateY`. |
+| `Eval(ShowVar(@x, f), A, NA)` | `ShowVar(@x, f) * A` | `ShowVar` returns TRUE; the `NA` branch is dead code. |
 
 ---
 
