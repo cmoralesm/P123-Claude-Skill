@@ -198,7 +198,7 @@ answers at the same method and path, the tag list is the same 9 tags, and the sc
 | New operation | Tag | What it gives you |
 |---|---|---|
 | `GET /dataSeries` | Data Series | Look a data series up by id or name; ends the write-only era of this tag. |
-| `GET /rank` | Rank | Read a ranking system by id or name, XML `nodes` included. |
+| `GET /rank` | Rank | Read a ranking system by id or name; the XML comes back as `xml` (the spec calls it `nodes`). |
 | `POST /rank/create` | Rank | Create a **new** ranking system instead of overwriting one. |
 | `GET /strategy` | Strategy | Resolve a strategy or book name to the id every other Strategy call needs. |
 | `POST /strategy/{id}/copy` | Strategy | Save a copy of a strategy as `PTF` (live) or `SIM`. |
@@ -258,8 +258,8 @@ Path `id` = predictor ID (int32). Body `PredictParams` (all optional): `precisio
 
 **`POST /data`** - Get Data. Wrapper: `data(params, to_pandas=False)`.
 Body `DataParams`: required `formulas` (array, 100 max) and `startDt` (date). Choose one identifier
-set: `tickers`, `p123Uids`, `gvkeys`, `ciks`, or `figis` (each 100 max). Optional: `endDt`,
-`frequency` (default `Every Week`), `region` (`United States` default, `Canada`, `North America`,
+set: `tickers`, `p123Uids`, `gvkeys`, `ciks`, or `figis` (each 100 max). Optional: `endDt` (default: the latest
+available date, see [Known Pitfalls](#known-pitfalls)), `frequency` (default `Every Week`), `region` (`United States` default, `Canada`, `North America`,
 `Europe`, `North Atlantic`), `pitMethod` (`Complete` default | `Prelim`), `precision` (2–8),
 `currency` (`USD` default, plus `CAD`, `EUR`, `GBP`, `CHF`, `NOK`, `PLN`, `SEK` and `TRY`),
 `benchmark`, `includeNames`, `ignoreErrors` (default true). Free trial: IBM, MSFT, INTC, 5Y.
@@ -363,13 +363,15 @@ Path `id`. Mutating.
 ### Rank
 
 **`GET /rank`** - Rank Info **(new 2026-08-28)**. Wrapper: `rank_get(*, id=None, name=None)`.
-Query `id` (int32) or `name`; pass exactly one. Returns `RankGetResult`: `name`, `id`, `nodes` (the
-whole ranking system as one XML string), `type` (`Stock` | `ETF`), `rankingMethod`, `currency`,
-`groupUid` (group ID) and `resolveGroupUid` (group context ID). `RankGetResult` is **not**
-`SharedResult`-wrapped, so the body carries no `cost`/`quotaRemaining`. Errors 402/403/404/406.
-Read-only. This is what makes a safe edit cycle possible: read `nodes`, change it, write it back
-with `POST /rank`. See [Known Pitfalls](#known-pitfalls) - the wrapper's result type spells this
-field `xml`, not `nodes`.
+Query `id` (int32) or `name`; pass exactly one. The spec's `RankGetResult` lists `name`, `id`, `nodes`
+(the whole ranking system as one XML string), `type` (`Stock` | `ETF`), `rankingMethod`, `currency`,
+`groupUid` (group ID) and `resolveGroupUid` (group context ID). **The live body names the XML field
+`xml`, not `nodes`** (checked on 2026-10-31 on `ApiRankingSystem`: the keys were `currency`, `groupUid`,
+`id`, `name`, `rankingMethod`, `resolveGroupUid`, `type` and `xml`), which is the name `p123api` 3.1.0's
+`RankInfoResult` reads, so `rank_get(...).xml` is populated. The write calls keep calling it `nodes`.
+`RankGetResult` is **not** `SharedResult`-wrapped, so the body carries no `cost`/`quotaRemaining`.
+Errors 402/403/404/406. Read-only. This is what makes a safe edit cycle possible: read `xml`, change
+it, write it back as `nodes` with `POST /rank`.
 
 **`POST /rank`** - Rank Update. Wrapper: `rank_update(params)`.
 Body `RankParams`: required `nodes` (ranking-system XML string) and `type` (`Stock` | `ETF`);
@@ -946,11 +948,30 @@ parameter name, **the wrapper wins** (it is closer to production).
   uses `#Bench`, for instance `Ret%Chg(231, 21, #Bench)`, fails with HTTP 409
   `Benchmark is undefined for function Ret%Chg()` unless the request carries `benchmark`, a ticker
   such as `'SPY'`. The benchmark is a parameter of the request, not something the formula can set.
+  Checked on 2026-10-31 on `POST /data` (IBM) and on `POST /data/universe` (DJIA): both answer 409
+  without it and return values with `benchmark='SPY'`.
 
 - **A 406 is not always "account inactive".** Without a data license, `POST /data` for any ticker other than
   IBM, INTC and MSFT returns HTTP 406 with the message `You can only test historical data with IBM, INTC,
   & MSFT`. The status table above lists 406 as an inactive account, so read the message before
-  concluding the credentials are wrong. Screens and ranks can still work on the same account.
+  concluding the credentials are wrong. Screens and ranks can still work on the same account, and so can
+  `POST /data/universe`: a DJIA pull succeeded on 2026-10-31 on an account whose `POST /data` answers
+  406 for every ticker except IBM, INTC and MSFT, so the entitlements are not one switch.
+
+- **The date range of `POST /data`.** Samples are weekly (Saturdays) by default. Without `endDt` the
+  call returns every sample through the latest available date, so a request meant for one date returns
+  the whole history (158 dates for three years). The credit cost did not grow with it on the three
+  license-free tickers: 1 credit for one data point and 1 for 4,740 (three tickers by ten formulas by
+  158 dates); pricing by volume on a licensed account was not tested. `startDt` equal to `endDt` is
+  rejected with HTTP 409 `Invalid period`. For one sample send `endDt` one day after `startDt`:
+  `startDt` 2026-10-24 (a Saturday) with `endDt` 2026-10-25 returned exactly one date, and 2026-10-03
+  with 2026-10-10 returned two. A `startDt` that is not a sample date also returns the sample just
+  before it (Friday 2026-10-02 to Saturday 2026-10-03 returned 2026-09-26 and 2026-10-03).
+
+- **A formula that cannot be parsed or evaluated is HTTP 409 and names the token.** A bare line-item or
+  function name gives `In Formula 1: Error near 'OperCashFl': Missing left parenthesis`, and a `Sharpe`
+  range out of bounds gives `Parameter period must be between 5 and 501`. The bare-name call observed
+  on 2026-10-31 was not charged.
 
 - **`pip install p123api` no longer installs pandas.** In 3.x pandas is an optional extra; in 2.x
   it was a hard requirement imported at module load. 3.1.0 imports it lazily *inside* each
@@ -977,19 +998,18 @@ parameter name, **the wrapper wins** (it is closer to production).
   `AttributeError`. They also discard `cost` and `quotaRemaining`, so read those from
   `client.cost` / `client.quotaRemaining`. Full list: [Return types](#return-types).
 
-- **Spec and wrapper disagree on two 2026-08-28 response shapes.** This section's rule - the
-  wrapper wins - settles *request* parameter names, not response shapes, and neither of these can
-  be settled offline. (a) `rank_get(...).xml` may be empty: the wrapper's `RankInfoResult` declares
-  the ranking XML as `xml`, the live spec's `RankGetResult` calls that property `nodes`, and the
-  constructor copies only declared names - so if the server follows the spec, the XML arrives but
-  the attribute is `None`. Read `getattr(result, 'xml', None)` and treat a `None` as suspect rather
-  than as a ranking system with no nodes. (b) `rank_create` may raise `AttributeError` instead of
-  returning: the spec types the 200 body of `POST /rank/create` as a bare `integer`, but the
-  wrapper wraps it with `IdResult`, whose constructor calls `.get('id')` on the body - which fails
-  on a bare integer, **after** the ranking system has already been created server-side. Verify each
-  with one live call before scripting against it; if `rank_create` raises, recover the new id with
-  `rank_get(name=...)`. `strategy_copy` and `book_copy` are unaffected - their `StrategyCopyResult`
-  really does carry `id`.
+- **Spec and wrapper disagreed on two 2026-08-28 response shapes; one is settled.** This section's rule
+  (the wrapper wins) settles *request* parameter names, not response shapes. (a) *Settled on
+  2026-10-31:* the live `GET /rank` body carries the XML as `xml`, the name `RankInfoResult` reads, so
+  `rank_get(...).xml` is populated (8,800 characters for `ApiRankingSystem`) even though the spec's
+  `RankGetResult` calls the property `nodes`. A `None` there would still be a problem, not a ranking
+  system with no nodes. (b) *Still unverified:* `rank_create` may raise `AttributeError` instead of
+  returning: the spec types the 200 body of `POST /rank/create` as a bare `integer`, but the wrapper
+  wraps it with `IdResult`, whose constructor calls `.get('id')` on the body, which fails on a bare
+  integer **after** the ranking system has already been created server-side. Checking it needs a
+  write, so verify with one live call before scripting against it; if `rank_create` raises, recover
+  the new id with `rank_get(name=...)`. `strategy_copy` and `book_copy` are unaffected: their
+  `StrategyCopyResult` really does carry `id`.
 
 - **`token` parameter location - fixed 2026-08-28.** The auth-token header parameter used to live
   under `components/schemas` (`AccessToken`) instead of `components/parameters`, so tooling that

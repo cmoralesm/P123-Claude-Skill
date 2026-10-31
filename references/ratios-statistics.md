@@ -1958,6 +1958,13 @@ Formula
 
 DepAmort2GP = DepAmort/ GrossProfit
 
+As written, P123's formula names the income-statement `DepAmort`, but the factor divides the
+cash-flow-statement `DepAmortCF` by `GrossProfit` (checked on 2026-10-31 on `DepAmort2GPTTM`). On MSFT
+the factor is 0.143295, which is 38,534 / 268,913 with `DepAmortCF`, while `DepAmort` (43,448) would
+give 0.1616. IBM and INTC report the same figure on both statements, so there the two readings
+coincide and the documented formula looks right. To reproduce the factor, use
+`DepAmortCF(0, TTM) / GrossProfit(0, TTM)`.
+
 
 #### `IntCov(offset, type[, NAHandling])`
 

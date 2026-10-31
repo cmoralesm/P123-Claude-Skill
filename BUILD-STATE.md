@@ -2,6 +2,39 @@
 
 Claude Code: update this file after completing each phase/gate (see ../PLAN.md).
 
+## v4.2.1 - patch from the p123-mcp 0.2.0 live checks (2026-10-31)
+
+**No re-extraction.** `v4.2.1/` is `v4.2/` plus the corrections below. Method: read-only calls through the
+`p123` MCP server code (IBM, INTC, MSFT; DJIA for the universe endpoint), 16 credits, no write tool enabled.
+
+| Check | Result |
+|---|---|
+| `GET /rank` body keys (`ApiRankingSystem`) | `currency`, `groupUid`, `id`, `name`, `rankingMethod`, `resolveGroupUid`, `type`, **`xml`**; not `nodes` |
+| Typed `rank_get(name=...)` (p123api 3.1.0) | `RankInfoResult`, `.xml` populated (8,800 chars), not subscriptable |
+| `#Bench` without `benchmark` | HTTP 409 `Benchmark is undefined for function Ret%Chg()` on `POST /data` and on `POST /data/universe` |
+| `#Bench` with `benchmark='SPY'` | values on both endpoints |
+| `POST /data/universe` on DJIA on an account limited to IBM/INTC/MSFT on `POST /data` | works (separate entitlement) |
+| `POST /data` Sat 2026-10-03, no `endDt` | five weekly dates, to 2026-10-31 (the latest) |
+| Sat 10-03 to Sat 10-10, and Fri 10-02 to Sat 10-03 | two dates each; the Friday start also returns the sample before it, `2026-09-26` |
+| Sat 10-24 to Sun 10-25 | one date, `2026-10-24` |
+| `startDt` == `endDt` | HTTP 409 `Invalid period`, not charged |
+| Credit cost against volume on `POST /data` | 1 credit for 1 point, for 158 dates x 1 x 1, and for 3 tickers x 10 formulas x 158 dates (4,740 points); no scaling on the license-free tickers |
+| Bare `OperCashFl` formula | HTTP 409 `In Formula 1: Error near 'OperCashFl': Missing left parenthesis`, not charged |
+| `DepAmort2GPTTM` vs candidates (IBM, INTC, MSFT) | equals `DepAmortCF(0, TTM) / GrossProfit(0, TTM)` on all three; `DepAmort` gives 0.1616 on MSFT against 0.143295; the `GAAP` gross profit variants do not match |
+
+### Findings
+
+| ID | Severity | Finding | Status |
+|---|---|---|---|
+| NEW-8 (a) | Minor | `GET /rank` XML field name | **CLOSED**: `xml` |
+| NEW-8 (b) | Open | `POST /rank/create` return shape | OPEN (write needed) |
+| NEW-21 | Minor | `DepAmort2GP` differs on MSFT | **CLOSED**: numerator is `DepAmortCF` |
+| NEW-23 | Minor | `POST /data` date range undocumented (default `endDt`, equal dates, one-date recipe) | FIXED (documented) |
+| NEW-24 | Minor | Formula errors are HTTP 409 with the token named | FIXED (documented) |
+| NEW-25 | Minor | `#Bench` rule verified on only one endpoint in 4.2.0 | FIXED (both verified) |
+| NEW-4 | Open | `Weight="0"` equal-weight rule is reporter-only | OPEN (write needed) |
+| NEW-22 | Open | Industry variants of the `5Y` pairs not tested | OPEN |
+
 ## v4.2.0 - live-data audit (2026-10-31)
 
 **No re-extraction.** `v4.2/` is `v4.1/` plus the corrections below. Method: every place where the

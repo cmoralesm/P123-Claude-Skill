@@ -1,10 +1,45 @@
 # Changelog
 
-## [Unreleased]
+## [4.2.1] - 2026-10-31
+
+Patch release. It closes two of the loose ends that 4.2.0 listed as unresolved and records what else
+turned up while the companion MCP server (p123-mcp 0.2.0) was being updated. Everything below was measured
+on the live API with read-only calls on IBM, INTC, MSFT and DJIA (16 credits). The dictionary, the counts,
+the scripts and the other references are unchanged.
+
+### Fixed
+- **`GET /rank` returns the XML as `xml`.** The OpenAPI document calls the field `nodes`; the live body of
+  `ApiRankingSystem` carried `currency`, `groupUid`, `id`, `name`, `rankingMethod`, `resolveGroupUid`,
+  `type` and `xml`. That is the name `p123api` 3.1.0's `RankInfoResult` reads, and `rank_get(...).xml`
+  came back populated (8,800 characters), so the 4.1.0 warning that it "may be empty" is withdrawn. The
+  write calls keep `nodes`. The other open response shape, `POST /rank/create`, still needs a write.
+- **`DepAmort2GP` divides the cash-flow D&A (`DepAmortCF`) by `GrossProfit`**, not the income-statement
+  `DepAmort` that P123's formula names. IBM and INTC report the same figure on both statements, which is
+  why the documented formula looked right there; on MSFT `DepAmort2GPTTM` is 0.143295, which is
+  38,534 / 268,913 with `DepAmortCF`, while `DepAmort` would give 0.1616. Closes NEW-21 of 4.2.0.
 
 ### Added
-- `evals/evals.json` is now in the repository: 28 evaluation prompts (ids 1 to 28), previously kept
-  only in the maintainer's build tree. It is not part of the `.skill` package.
+- `api.md`, Known Pitfalls: four behaviors of the data endpoints that were undocumented.
+  - **The date range of `POST /data`.** Without `endDt` the call returns every weekly sample through the
+    latest available date (the credit cost did not grow with it on the license-free tickers: 1 credit for
+    one data point and for 4,740); `startDt` equal to `endDt` is rejected (HTTP 409 `Invalid period`);
+    one date is requested with `endDt` one day after `startDt`.
+  - **Formula errors** are HTTP 409 with the formula number and the token, for example
+    `In Formula 1: Error near 'OperCashFl': Missing left parenthesis` for a bare line-item name; that call
+    was not charged.
+  - **`#Bench` needs `benchmark`** on `POST /data` (IBM) and on `POST /data/universe` (DJIA); 4.2.0 stated
+    it for both after testing one.
+  - **Entitlements are not one switch.** On an account where `POST /data` answers 406 for every ticker
+    except IBM, INTC and MSFT, a DJIA pull through `POST /data/universe` worked.
+- `SKILL.md`: a row in the common-mistakes table for a bare line-item name in a formula.
+- **Evals.** `evals/evals.json`, 31 prompts, is now in the repository; until now it lived only in the
+  maintainer's build tree. It is not part of the `.skill` package. Evals 29 to 31 are new: `#Bench`
+  without `benchmark`, a single date requested with equal `startDt` and `endDt`, and the attribute that
+  holds the XML after `rank_get`.
+
+### Still open
+- The return shape of `POST /rank/create`, the `Weight="0"` rule and the `contains_header_row` default
+  need a write to the account. The industry variants of the `5Y` pairs were not tested.
 
 ## [4.2.0] - 2026-10-31
 

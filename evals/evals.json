@@ -139,7 +139,7 @@
     {
       "id": 14,
       "prompt": "Write a P123 formula for 5-year compound annual sales growth using LoopProd. Then tell me how P123 parses 2 * MktCap^0.5 and MktCap^1/3.",
-      "expected_output": "LoopProd(\"Sales(CTR, ANN) / Sales(CTR + 1, ANN)\", 5)^(1/5) - 1. The ^ operator has the highest precedence in the language, so 2 * MktCap^0.5 is 2 * (MktCap^0.5), and MktCap^1/3 is (MktCap^1)/3 — a third of market cap, not a cube root. An n-th root needs explicit parentheses: MktCap^(1/3).",
+      "expected_output": "LoopProd(\"Sales(CTR, ANN) / Sales(CTR + 1, ANN)\", 5)^(1/5) - 1. The ^ operator has the highest precedence in the language, so 2 * MktCap^0.5 is 2 * (MktCap^0.5), and MktCap^1/3 is (MktCap^1)/3 - a third of market cap, not a cube root. An n-th root needs explicit parentheses: MktCap^(1/3).",
       "expectations": [
         "Fractional exponent is parenthesized: ^(1/5), and the cube root is written MktCap^(1/3)",
         "States that ^ binds tighter than * so 2 * MktCap^0.5 is 2 * (MktCap^0.5)",
@@ -150,7 +150,7 @@
     {
       "id": 15,
       "prompt": "Write one P123 formula that defines a variable for momentum (total return over 252 bars, ending 21 bars ago) and returns its signed square (magnitude squared, sign preserved), reusing that variable.",
-      "expected_output": "SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r). SetVar always returns TRUE (1) and never the assigned value, which is exactly what allows the definition to be inlined: 1 * @r * Abs(@r) reduces to @r * Abs(@r). Eval(SetVar(@r, Ret%Chg(252, 21)), @r * Abs(@r), NA) is wrong — the condition is TRUE for every stock, so the NA branch is unreachable dead code.",
+      "expected_output": "SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r). SetVar always returns TRUE (1) and never the assigned value, which is exactly what allows the definition to be inlined: 1 * @r * Abs(@r) reduces to @r * Abs(@r). Eval(SetVar(@r, Ret%Chg(252, 21)), @r * Abs(@r), NA) is wrong - the condition is TRUE for every stock, so the NA branch is unreachable dead code.",
       "expectations": [
         "Inlines the assignment into the expression, e.g. SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r) (an 'and' form is equally acceptable)",
         "Does NOT wrap SetVar in Eval(...); if Eval is mentioned it is identified as a dead NA branch, not offered as the solution",
@@ -161,7 +161,7 @@
     {
       "id": 16,
       "prompt": "Two P123 problems. (a) My screen rule SetVar(@x, Ret%Chg(252, 21)) > 10 matches nothing. (b) My sell rule SetVar(@stop, Close(0) < SMA(50)) liquidates every position at the first rebalance. What is happening, and how do I fix each?",
-      "expected_output": "(a) SetVar returns TRUE (1), not the assigned value, so the rule evaluates 1 > 10 — false for every stock. Assign in its own rule and test the variable in the next one (SetVar(@x, Ret%Chg(252, 21)) then @x > 10), or inline the assignment. (b) A bare SetVar rule is always TRUE, and a sell rule that is TRUE always sells; negate it — !SetVar(@stop, ...) — to define the variable without triggering the sell.",
+      "expected_output": "(a) SetVar returns TRUE (1), not the assigned value, so the rule evaluates 1 > 10 - false for every stock. Assign in its own rule and test the variable in the next one (SetVar(@x, Ret%Chg(252, 21)) then @x > 10), or inline the assignment. (b) A bare SetVar rule is always TRUE, and a sell rule that is TRUE always sells; negate it - !SetVar(@stop, ...) - to define the variable without triggering the sell.",
       "expectations": [
         "Diagnoses (a) as SetVar returning TRUE/1, so the comparison is 1 > 10",
         "Fixes (a) by splitting the assignment and the test across rules, or by inlining; not by wrapping SetVar in Eval",
@@ -172,7 +172,7 @@
     {
       "id": 17,
       "prompt": "Review this P123 ranking system XML and tell me if anything is wrong with it:\n<RankingSystem RankType=\"Higher\">\n  <Composite Name=\"Quality\" Weight=\"30\" RankType=\"Higher\">\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>ROE%TTM</Factor></StockFactor>\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>OpMgn%TTM</Factor></StockFactor>\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>GMgn%TTM</Factor></StockFactor>\n  </Composite>\n</RankingSystem>",
-      "expected_output": "Nothing is wrong. Weight=\"0\" is legal and means equal weight, not a disabled node: P123 documents the node weight as [0] - 100 where 0 indicates equal weight, and 0 is the default when the attribute is omitted. Since no sibling carries a positive weight, the Quality composite's 30 points split evenly — 10 points each. Rewriting the three zeros as Weight=\"33\" (or deleting them) yields the same ranking system, so it is a cosmetic change to make only if asked.",
+      "expected_output": "Nothing is wrong. Weight=\"0\" is legal and means equal weight, not a disabled node: P123 documents the node weight as [0] - 100 where 0 indicates equal weight, and 0 is the default when the attribute is omitted. Since no sibling carries a positive weight, the Quality composite's 30 points split evenly - 10 points each. Rewriting the three zeros as Weight=\"33\" (or deleting them) yields the same ranking system, so it is a cosmetic change to make only if asked.",
       "expectations": [
         "Does not report Weight=\"0\" as an error, a bug, or a disabled/ignored/skipped node",
         "States that 0 (or an omitted Weight) means equal weight and that the parent's weight splits evenly across the children",
@@ -183,12 +183,12 @@
     {
       "id": 18,
       "prompt": "Using p123api, create a P123 data series and upload a CSV to it. The CSV's first row is a header, anything already stored should be overwritten, and the dates are yyyy-mm-dd. Also, how do I find that series by name later?",
-      "expected_output": "client.data_series_create_update({'name': ...}) returns dataSeriesId — persist it — then client.data_series_upload(series_id, data=CSV, contains_header_row=True, existing_data='overwrite', date_format='yyyy-mm-dd'). Every option is a snake_case Python kwarg; headerRow / existingData / dateFormat are the camelCase HTTP query parameters the wrapper builds itself and raise TypeError if passed as kwargs. To find the series by name later, use the keyword-only lookup client.data_series_info(name='...'), which P123 backed with GET /dataSeries on 2026-08-28; it returns a DataSeriesInfoResult and you read .dataSeriesId off it by attribute. Persisting the id at creation is still the cheaper path, but it is no longer the only one.",
+      "expected_output": "client.data_series_create_update({'name': ...}) returns dataSeriesId - persist it - then client.data_series_upload(series_id, data=CSV, contains_header_row=True, existing_data='overwrite', date_format='yyyy-mm-dd'). Every option is a snake_case Python kwarg; headerRow / existingData / dateFormat are the camelCase HTTP query parameters the wrapper builds itself and raise TypeError if passed as kwargs. To find the series by name later, use the keyword-only lookup client.data_series_info(name='...'), which P123 backed with GET /dataSeries on 2026-08-28; it returns a DataSeriesInfoResult and you read .dataSeriesId off it by attribute. Persisting the id at creation is still the cheaper path, but it is no longer the only one.",
       "expectations": [
         "Passes the payload as data=, not file=",
-        "Uses contains_header_row=True — never headerRow=True and never header_row=True",
+        "Uses contains_header_row=True - never headerRow=True and never header_row=True",
         "Uses snake_case existing_data='overwrite' and date_format='yyyy-mm-dd', not existingData / dateFormat",
-        "Captures dataSeriesId from data_series_create_update, and answers the lookup question with data_series_info(name=...) returning a DataSeriesInfoResult — not with the pre-2026-08-28 story that no GET /dataSeries exists and the call 405s"
+        "Captures dataSeriesId from data_series_create_update, and answers the lookup question with data_series_info(name=...) returning a DataSeriesInfoResult - not with the pre-2026-08-28 story that no GET /dataSeries exists and the call 405s"
       ]
     },
     {
@@ -303,6 +303,39 @@
         "Notes that P123's formula omits the 100 but the factor does not",
         "Notes that a hand-written FCFTTM / MktCap would be a plain ratio, 100 times smaller",
         "Does not invent factor names"
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "My p123api script asks data() for Ret%Chg(231, 21, #Bench) on a handful of tickers and the API answers HTTP 409 'Benchmark is undefined for function Ret%Chg()'. What is missing?",
+      "expected_output": "The request, not the formula. A data call that uses #Bench has to carry the benchmark as a request parameter: add benchmark='SPY' (or another benchmark ticker) to the params of data() or data_universe(). Both endpoints answer 409 without it and return values with it. The formula cannot set the benchmark itself.",
+      "expectations": [
+        "Says the data request needs a benchmark parameter, for example benchmark='SPY'",
+        "Says the benchmark is a request parameter and cannot be set inside the formula",
+        "Applies it to both the data and the data_universe calls",
+        "Does not suggest renaming or replacing #Bench, and does not invent another constant"
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "I need a single date of data for 50 tickers. I call data() with startDt and endDt both set to 2026-10-24 and get HTTP 409 'Invalid period'. If I drop endDt it runs but returns far more rows than I wanted. What should I send?",
+      "expected_output": "Equal dates are rejected, and dropping endDt is not a single date: the default is every weekly sample through the latest available date (five dates here, to 2026-10-31). Send endDt one day after startDt (2026-10-25), which returns the single Saturday sample 2026-10-24. Use a sample date for startDt, because a date that is not a sample also returns the sample just before it.",
+      "expectations": [
+        "Says startDt equal to endDt is rejected as an invalid period",
+        "Says omitting endDt returns every weekly sample through the latest date, not one date",
+        "Recommends endDt one day after startDt for a single date",
+        "Mentions that a non-sample startDt also returns the previous sample"
+      ]
+    },
+    {
+      "id": 31,
+      "prompt": "With p123api 3.1.0 I run res = client.rank_get(name='Core: Value') and print(res.nodes), but I get an AttributeError. The OpenAPI spec says GET /rank returns nodes. Which attribute holds the ranking-system XML?",
+      "expected_output": "res.xml. The OpenAPI document calls the field nodes, but the live GET /rank body and the wrapper's RankInfoResult both use xml, so the attribute is populated. nodes is the name of the field you send when you write the system back with rank_update or rank_create. The result is a typed object, so use attribute access (res.xml), not res['xml'].",
+      "expectations": [
+        "Answers res.xml",
+        "Explains that the spec names the field nodes while the live response and the typed result use xml",
+        "Notes that nodes is the field to send when writing the XML back",
+        "Says the typed result must be read with attributes, not subscripts"
       ]
     }
   ]

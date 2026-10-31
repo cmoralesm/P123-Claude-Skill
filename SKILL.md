@@ -150,6 +150,7 @@ per-category tables live in each reference file's Common Mistakes section):
 | `BenchmarkClose` | `BenchClose` | benchmark close |
 | `Average` / `Ln` | `Avg` / `LN` | math function spellings |
 | a bare 5Y margin or payout factor read as a 5-year average | the `5YAvg` twin, e.g. `NPMgn%5YAvg` | the bare `5Y` ones are ratios of five-year sums |
+| `100 * OperCashFl / MktCap` (a bare line-item name) | `100 * OperCashFlTTM / MktCap` | line items are functions: a bare name fails with HTTP 409 "Missing left parenthesis"; use the prebuilt variant or call it, `OperCashFl(0, TTM)` |
 | `Power` / `Pow(x, y)` | `x^y` | `^` is the power operator; `Pow` is the verbose equivalent |
 | `Sqrt(x)` / `Exp(x)` | `x^0.5` / `2.718281828^x` | no root or exp function; `^` is the power operator |
 | `PlusDI` / `MinusDI` | `DMIPlus` / `DMIMinus` | directional indicators |

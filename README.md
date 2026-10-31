@@ -16,7 +16,10 @@ Claude into a reliable Portfolio123 (P123) assistant: writing screen rules and f
 building ranking-system XML, replicating published factors, and pulling data through the REST API
 with the official `p123api` Python wrapper.
 
-**v4.2.0** is the current release, a live-data audit of the skill. A Portfolio123 forum member
+**v4.2.1** is the current release: a patch that settles the `GET /rank` response field (`xml`), the
+real numerator of `DepAmort2GP` (`DepAmortCF`) and how `POST /data` treats its date range.
+
+**4.2.0** was a live-data audit of the skill. A Portfolio123 forum member
 noticed that the skill described `NPMgn%5Y` as an average of yearly margins; the factor is in fact a
 ratio of five-year sums, and the same holds for six sibling factors. Checking that claim against the
 live API turned up more places where P123's own documentation and the factor's behavior part ways, all
@@ -94,7 +97,7 @@ portfolio123/
 │   ├── factor-replication.md     # 35 published-factor recipes, node direction/scope, traps
 │   └── ranking-system-xml.md     # Validated ranking XML schema; always read before XML work
 ├── scripts/                      # 9 runnable CLI examples + p123_helpers.py (see scripts/README.md)
-├── evals/evals.json              # 28 evaluation prompts (repo only; excluded from the .skill package)
+├── evals/evals.json              # 31 evaluation prompts (repo only; excluded from the .skill package)
 ├── docs/                         # repository assets (excluded from the .skill package)
 ├── BUILD-STATE.md                # build & verification log for this release
 ├── README.md · CHANGELOG.md · LICENSE · .gitignore
@@ -218,7 +221,7 @@ unless run with `--execute` and a typed confirmation. See [scripts/README.md](sc
 
 ## Evals
 
-[`evals/evals.json`](evals/evals.json) holds 28 prompts in the skill-creator format (`id`, `prompt`,
+[`evals/evals.json`](evals/evals.json) holds 31 prompts in the skill-creator format (`id`, `prompt`,
 `expected_output`, `expectations`). They are regression tests for the failure modes this skill exists
 to prevent: invented factor names, one-argument `IsNA`, a made-up square-root function, `SetVar` wrapped in
 `Eval`, `Weight="0"` flagged as an error, camelCase upload kwargs, a bare `5Y` factor read as an average, and so on. Each
