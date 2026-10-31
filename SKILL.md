@@ -17,7 +17,7 @@ license: MIT
 
 <!-- name-whitelist: NAHandling P123_API_ID P123_API_KEY quotaRemaining asOfDt
 includeNodeDetails nodeDetails apiId Q PQ PYQ PTM A PY screen_run screen_backtest
-rank_ranks data_universe aifactor_predict to_pandas api_id api_key ClientException -->
+rank_ranks data_universe aifactor_predict to_pandas api_id api_key ClientException PSQ PSA -->
 # Portfolio123 (P123)
 
 Portfolio123 is a web platform for systematic equity research: screening, multi-factor ranking
@@ -69,6 +69,8 @@ MktCap > @med:FMedian("MktCap")
 // Math: + - * / and ^ (power). ^ outranks every other operator, so 2*x^3 is 2*(x^3).
 // x^y and Pow(x, y) are the same operation - write x^y. There is NO Sqrt: a square
 // root is x^0.5, an n-th root x^(1/n) (parens required, since x^1/3 means (x^1)/3).
+// Unlike math and Python, a leading minus binds tighter than ^ and chains go left:
+// -2^2 is 4 and 2^3^2 is 64. Write -(x^2) and a^(b^c) for the usual readings.
 MktCap^0.5                          // square root of market cap; NOT Sqrt(MktCap)
 
 // Conditional: Eval(condition, value_if_true, value_if_false)
@@ -107,7 +109,11 @@ factor variants: `Sales(offset, type[, NAHandling])` with `type` = `QTR`/`ANN`/`
 suffixes to the same base - `SalesQ`, `SalesPQ`, `SalesPYQ`, `SalesTTM`, `SalesPTM`, `SalesA`,
 `SalesPY`, growth `SalesGr%TTM`/`SalesGr%A`, per-share `SalesPSQ`, averages `Sales5YAvg`,
 regressions `SalesRegGr%TTM`. The same suffix system drives most of the 4,463 factors - see
-[references/financials.md](references/financials.md).
+[references/financials.md](references/financials.md). Verified on live data, and contrary to P123's own
+suffix page: per-share `PSQ`/`PSA` divide by fully diluted shares (`SharesFD`), `Gr%` growth divides by
+`Abs` of the older value, and the seven legacy bare-`5Y` margin and payout factors (`NPMgn%5Y`,
+`GMgn%5Y`, `OpMgn%5Y`, `PTMgn%5Y`, `EBITDAMgn%5Y`, `SGA2Sales%5Y`, `PayRatio5Y`) are ratios of
+five-year sums, not the average of annual ratios that `5YAvg` computes.
 
 **Screens vs rankings.** Screen rules are boolean tests evaluated per stock. Ranking systems
 combine weighted factor nodes into a 0–100 rank; in a ranking node, "lower is better" controls
@@ -143,6 +149,7 @@ per-category tables live in each reference file's Common Mistakes section):
 | `UnivCount` | `UnivCnt` | universe count |
 | `BenchmarkClose` | `BenchClose` | benchmark close |
 | `Average` / `Ln` | `Avg` / `LN` | math function spellings |
+| a bare 5Y margin or payout factor read as a 5-year average | the `5YAvg` twin, e.g. `NPMgn%5YAvg` | the bare `5Y` ones are ratios of five-year sums |
 | `Power` / `Pow(x, y)` | `x^y` | `^` is the power operator; `Pow` is the verbose equivalent |
 | `Sqrt(x)` / `Exp(x)` | `x^0.5` / `2.718281828^x` | no root or exp function; `^` is the power operator |
 | `PlusDI` / `MinusDI` | `DMIPlus` / `DMIMinus` | directional indicators |

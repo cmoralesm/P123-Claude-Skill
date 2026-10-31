@@ -18,6 +18,42 @@ Most ratio functions in this category share the same calling convention. Unless 
 
 Each function also has prebuilt factor variants (a base code plus a period suffix such as Q, PQ, TTM, A, or PY); those are listed in the factor tables under each subcategory. Quarterly values from income and cash-flow statements are annualized so they compare with 12-month figures.
 
+### 5Y versus 5YAvg
+
+Seven legacy factors carry a bare `5Y` suffix: `NPMgn%5Y`, `GMgn%5Y`, `OpMgn%5Y`, `PTMgn%5Y`,
+`EBITDAMgn%5Y`, `SGA2Sales%5Y` and `PayRatio5Y`. Each one is a **ratio of five-year sums**: the
+numerator summed over the five most recent fiscal years, divided by the denominator summed over the
+same years (revenue for the margins, `NetIncBXor` for the payout ratio). Their `5YAvg` twins, such as
+`NPMgn%5YAvg`, are the **mean of the five annual ratios**, the `LoopAvg("function(CTR, ANN)", 5)`
+expansion. The first weights each year by its size, so a year with far more revenue dominates the
+result; the second gives every year one equal vote.
+
+P123's detail pages for the seven `5Y` factors say each one averages the five annual ratios. That
+wording describes the `5YAvg` twin, not the factor it is attached to. A forum report flagged it for
+`NPMgn%5Y`, and a live check on 2026-10-31 confirmed the ratio-of-sums behavior for all seven:
+
+| Ticker | `NPMgn%5Y` | Sum of net income / sum of sales | `NPMgn%5YAvg` | Mean of the five annual margins |
+|---|---|---|---|---|
+| IBM | 9.8687 | 9.8687 | 9.7096 | 9.7096 |
+| INTC | 3.4897 | 3.4897 | 1.0279 | 1.0279 |
+| MSFT | 36.9475 | 36.9475 | 36.6480 | 36.6480 |
+
+The annual margins come from `NPMgn%(0, ANN)` to `NPMgn%(4, ANN)`, with net income recovered as each
+margin times `Sales(k, ANN)`. The same two identities hold to six decimals for the other five margin
+factors on all three tickers. `PayRatio5Y` equals total dividends over total `NetIncBXor` for IBM and
+MSFT (99.3115 and 23.4932), using each year's payout ratio times that year's net income as the
+dividend figure.
+
+- **Choosing.** Use `5Y` to ask what the business earned per dollar of sales over five years; use
+  `5YAvg` for the typical single year with equal weight per year.
+- **NA behavior differs.** `5YAvg` is NA when any of the five annual ratios is NA. INTC has two
+  loss years, so `PayRatio5YAvg` is NA while `PayRatio5Y` still returns 155.95: it sums first.
+- **The industry variants** (`NPMgn%5YInd` and `NPMgn%5YAvgInd`, and the same pairs in
+  [industry-sector.md](industry-sector.md)) follow the same naming split. How P123 aggregates them
+  across an industry was not tested.
+- The general `5YAvg` and `3YAvg` suffixes match their `LoopAvg` expansion (verified on `Sales` and
+  on the margin family).
+
 ## Contents
 
 - [Valuation](#valuation)
@@ -671,6 +707,8 @@ The ratio is calculated by dividing the most recent trailing twelve months free 
 
 FCFYield = FCFTTM / MktCap
 
+As written, P123's formula omits the factor of 100: the live factor returns a percentage like `EarnYield` and `OCFYield` (IBM 5.76, against 100 * `FCFTTM` / `MktCap` = 5.82, the small gap coming from the share count). Treat it as `100 * FCFTTM / MktCap`.
+
 
 #### `OCFYield`
 
@@ -683,6 +721,8 @@ Operating cash flow measures the return a company is making without investing in
 Formula
 
 OCFYield = 100 * OperCashFl / MktCap
+
+Written with the bare line-item name, which does not run as a formula; the runnable form is `100 * OperCashFlTTM / MktCap` (IBM: factor 6.51, formula 6.57 - a different share count accounts for the gap).
 
 
 #### `OpIncYield`
@@ -789,45 +829,35 @@ This is calculated by dividing the Selling, General and Administrative (SG&A) Ex
 
 #### `EBITDAMgn%5Y`
 
-This value is calculated by first determining the annual EBITD Margins for the 5 most recent fiscal years and then averaging the values.
+Total EBITDA over the 5 most recent fiscal years divided by total revenue over the same years, as a percentage. Ratio of five-year sums, not an average of yearly margins (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's detail page describes an average of the five annual values, which is what the `5YAvg` twin computes.
 
 *Period: 5 Years*
 
 
 #### `GMgn%5Y`
 
-This value is calculated by first determining the Gross Margin for each of the 5 most recent fiscal years and then averaging the values.
-
-Gross Margin is Total Revenue minus Cost of Goods Sold divided by Total Revenue and is expressed as a percentage.
+Five-year gross profit divided by five-year revenue, as a percentage. Gross Margin is Total Revenue minus Cost of Goods Sold divided by Total Revenue. Ratio of five-year sums, not an average of yearly margins (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's detail page describes an average of the five annual values, which is what the `5YAvg` twin computes.
 
 *Period: 5 Years*
 
 
 #### `NPMgn%5Y`
 
-This value is calculated by first determining the Net Profit Margin for each of the 5 most recent fiscal years and then averaging the values.
-
-Net Profit Margin is the Income After Taxes divided by Total Revenue, expressed as a percentage.
+Five-year income after taxes divided by five-year total revenue, as a percentage. Ratio of five-year sums, not an average of yearly margins (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's detail page describes an average of the five annual values, which is what the `5YAvg` twin computes. Verified live on IBM, INTC and MSFT.
 
 *Period: 5 Years*
 
 
 #### `OpMgn%5Y`
 
-This value measures the percent of revenues remaining after paying all operating expenses. 
-
-It is calculated by first determining the Operating Margin for each of the last 5 fiscal years and then averaging the values. 
-
-Operating Margin is defined as Operating Income divided by Total Revenue and expressed as a percentage.
+Five-year operating income divided by five-year total revenue, as a percentage. Operating income is Total Revenue minus Total Operating Expenses. Ratio of five-year sums, not an average of yearly margins (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's detail page describes an average of the five annual values, which is what the `5YAvg` twin computes.
 
 *Period: 5 Years*
 
 
 #### `PTMgn%5Y`
 
-This value is calculated by determining the Pretax Margin for each of the 5 most recent fiscal years and averaging the values. 
-
-Pretax Margin is defined as the Income Before Taxes divided by the Total Revenue.
+Five-year income before taxes divided by five-year total revenue, as a percentage. Ratio of five-year sums, not an average of yearly margins (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's detail page describes an average of the five annual values, which is what the `5YAvg` twin computes.
 
 *Period: 5 Years*
 
@@ -1091,7 +1121,7 @@ Pretax Margin is defined as the Income Before Taxes divided by the Total Revenue
 | `SGA2Sales%RegGr%TTM` | Selling, general and administrative expenses (including R&D) as percentage of total sales. | Five Year Regression Growth |
 | `SGA2Sales%3YAvg` | Selling, general and administrative expenses (including R&D) as percentage of total sales. | Three Year Average |
 | `SGA2Sales%5YAvg` | Selling, general and administrative expenses (including R&D) as percentage of total sales. | Five Year Average |
-| `SGA2Sales%5Y` | Operating Margin, 5 Year Factor (%) | 5 Years |
+| `SGA2Sales%5Y` | SG&A (including R&D) over sales as a ratio of five-year sums. P123's own label reads "Operating Margin, 5 Year Factor", a copy error: on IBM the factor returns 38.5456, the sales-weighted `SGA2Sales%` ratio, while `OpMgn%5Y` returns 16.1575. | 5 Years |
 
 
 ## Profitability
@@ -1109,6 +1139,8 @@ ROA% = 100 * NetIncBXor / ( (a0 + a1)/2)
 a0 = AstTot end of period
 
 a1 = AstTot beginning of period
+
+For `TTM` the two endpoints are the latest quarter and the quarter four back: `ROA%TTM` equals `100 * NetIncBXorTTM / ((AstTot(0, QTR) + AstTot(4, QTR)) / 2)` on IBM, INTC and MSFT (checked 2026-10-31). It is not `AstTotTTM`, which averages four quarters, so `100 * NetIncBXorTTM / AstTotTTM` lands 1% to 2% away. `ROE%TTM` follows the same endpoint rule with `ComEq`.
 
 IMPORTANT: Quarterly values from Income & Cashflow statements are annualized to make the resulting factor more readily comparable with 12 month factors. The annualization is done by multiplying the quarterly figures by approximately 4 (depends on the actual number of days in the period).
 
@@ -1966,7 +1998,7 @@ Evauates to NA if NetIncBXor is negative or DivPaid is 0 or negative
 
 It's calculated as Total Dividends divided by Income Before Extraordinary Items for the period, multiplied by 100 to express the number in percentage points. Total dividends, in this case, includes dividends across all share classes and preferred shares. It does not include the value of non-cash dividends like stock dividends that were paid during the period, but it does otherwise include special dividends.
 
-The 5-year average payout ratio is calculated by taking the payout ratios for each of the last five fiscal years, from the annual data feed, and averaging them.
+That averaging describes `PayRatio5YAvg`, the mean of the five annual payout ratios. `PayRatio5Y` is the ratio of five-year sums (see [5Y versus 5YAvg](#5y-versus-5yavg)).
 
 
 #### `QuickRatio(offset, type[, NAHandling])`
@@ -2010,7 +2042,7 @@ Evauates to NA if NetIncBXor is negative or DivPaid is 0 or negative
 
 It's calculated as Total Dividends divided by Income Before Extraordinary Items for the period, multiplied by 100 to express the number in percentage points. Total dividends, in this case, includes dividends across all share classes and preferred shares. It does not include the value of non-cash dividends like stock dividends that were paid during the period, but it does otherwise include special dividends.
 
-The 5-year average payout ratio is calculated by taking the payout ratios for each of the last five fiscal years, from the annual data feed, and averaging them.
+`PayRatio5Y` is 100 times total dividends over total `NetIncBXor` across the last five fiscal years, a ratio of sums (see [5Y versus 5YAvg](#5y-versus-5yavg)). P123's description of it as the average of the five annual payout ratios belongs to `PayRatio5YAvg`. Unlike the annual ratio, it is not NA for a loss year inside the window.
 
 *Period: 5 Years*
 
@@ -3270,7 +3302,8 @@ AltmanZ Factors
 | `PEG` | `PEGLT` | Use `PEGLT` (long-term) or `PEGST` (short-term); a bare three-letter form is not a code. |
 | `GrossMargin` | `GMgn%` | Gross margin function/base code is `GMgn%`. |
 | `CurrentRatio` | `CurRatio` | Current ratio is `CurRatio`. |
-| `PayoutRatio` | `PayRatio` | Dividend payout ratio is `PayRatio` (5-year average is `PayRatio5Y`). |
+| `PayoutRatio` | `PayRatio` | Dividend payout ratio is `PayRatio`. Its 5-year average of annual ratios is `PayRatio5YAvg`; `PayRatio5Y` is the ratio of five-year sums. |
+| Reading a bare `5Y` margin or payout factor as a 5-year average | the `5YAvg` twin | The seven legacy `5Y` factors are ratios of five-year sums; see [5Y versus 5YAvg](#5y-versus-5yavg). |
 
 ## See Also
 

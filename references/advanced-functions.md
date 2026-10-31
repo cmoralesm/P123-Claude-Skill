@@ -185,7 +185,7 @@ Value of the formula a number of weeks in the past (negative values look into th
 
 #### `FHistAvg("formula", samples [, weeks_increment=1, NA_pct=20])`
 
-Average of the formula sampled `samples` times, spaced `weeks_increment` weeks apart.
+Average of the formula sampled `samples` times, spaced `weeks_increment` weeks apart. The first sample is the current value: `FHistAvg("ROE%TTM", 4, 13)` is the mean of `ROE%TTM` now and 13, 26 and 39 weeks ago (checked on 58 weekly dates). `FHist("formula", n)` is the value `n` weeks ago.
 
 #### `FHistMax("formula", samples [, weeks_increment=1, NA_pct=20])`
 

@@ -939,7 +939,18 @@ parameter name, **the wrapper wins** (it is closer to production).
   wrapper raises it as `ClientException` without retrying (only 401/403 trigger re-auth). (c)
   Persist the `dataSeriesId` returned by `data_series_create_update` anyway: the lookup spends a
   request, the id is what upload and delete take, and a name is a valid handle only until someone
-  renames the series.
+  renames the series. Confirmed on the live API on 2026-10-31: `GET /dataSeries` and `GET /stockFactor` both answer an
+  unknown name with HTTP 404 `Item not found`, not 405, so both lookups are routed.
+
+- **`#Bench` needs the `benchmark` request key on data calls.** A `/data` or `/data/universe` formula that
+  uses `#Bench`, for instance `Ret%Chg(231, 21, #Bench)`, fails with HTTP 409
+  `Benchmark is undefined for function Ret%Chg()` unless the request carries `benchmark`, a ticker
+  such as `'SPY'`. The benchmark is a parameter of the request, not something the formula can set.
+
+- **A 406 is not always "account inactive".** Without a data license, `POST /data` for any ticker other than
+  IBM, INTC and MSFT returns HTTP 406 with the message `You can only test historical data with IBM, INTC,
+  & MSFT`. The status table above lists 406 as an inactive account, so read the message before
+  concluding the credentials are wrong. Screens and ranks can still work on the same account.
 
 - **`pip install p123api` no longer installs pandas.** In 3.x pandas is an optional extra; in 2.x
   it was a hard requirement imported at module load. 3.1.0 imports it lazily *inside* each

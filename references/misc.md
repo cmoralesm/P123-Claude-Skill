@@ -476,10 +476,12 @@ Eval(EarnYield >= 0, Abs(EarnYield)^0.5, Negate(Abs(EarnYield)^0.5))
 [Math operators](#math-operators)), so `2 * MktCap^0.5` is `2 * (MktCap^0.5)`,
 `x^1/3` is `(x^1)/3`, and `@v:MktCap^0.5` sets `@v` to `MktCap^0.5`. The
 reference documents `^` only as "x raised to the power of y"; it says nothing
-about how a leading minus sign binds to it, nor whether a chained `a^b^c`
-associates left or right, so write `(-x)^2` and `(a^b)^c` explicitly rather
-than guess. A negative base with a fractional exponent is likewise
-undocumented - use the sign-preserving form above.
+about a leading minus sign or a chained `a^b^c`, but live tests (2026-10-31)
+settled both, and neither follows ordinary math or Python: a leading minus binds
+tighter than `^`, so `-2^2` is 4 and `-Close(0)^2` is positive, and a chain
+associates left, so `2^3^2` is 64, not 512. Write `-(x^2)` and `a^(b^c)` for the
+usual readings. A negative base with a fractional exponent returns NA
+(`(-4)^0.5`), so use the sign-preserving form above for signed roots.
 
 #### `Trunc(val)`
 Rounds `val` toward zero.
@@ -669,17 +671,12 @@ SetVar(@r, Ret%Chg(252, 21)) and @r > 10
 The reduction, step by step: `SetVar(@r, ...)` returns 1, so the first
 expression is `1 * @r * Abs(@r)`, which is `@r * Abs(@r)`.
 
-Provenance caveat: the reduction above follows from the documented return
-value, but the official reference only ever states that a variable is visible
-in *subsequent rules* - it does not say that `@r` is readable to the right of
-its own `SetVar` call in the same expression, and every official example
-defines in one rule and reads in the next. Same-expression visibility is
-nonetheless not a new dependency introduced by inlining: the older
-`Eval(SetVar(@r, f), @r * Abs(@r), NA)` idiom reads `@r` inside the same
-formula too, and that form is in working practitioner use - so inlining trades
-no correctness for its brevity, and reverting to the `Eval` wrapper buys
-nothing back. Prefer the documented two-rule form when a rule list exists;
-inline when there is no next rule.
+Verified live on 2026-10-31: the variable is readable to the right of its own `SetVar` call in the same
+expression. `SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r)` returned exactly the value of
+`Ret%Chg(252, 21) * Abs(Ret%Chg(252, 21))` and of the `Eval(SetVar(...), @r * Abs(@r), NA)` form,
+`SetVar(@x, 5)` returned 1 and `!SetVar(@x, 5)` returned 0. The official examples only show the
+two-rule form, so prefer it when a rule list exists; inline when there is no next rule (ranking
+nodes, API `formulas`).
 
 Do not wrap `SetVar` in `Eval`. In `Eval(SetVar(@r, f), @r * Abs(@r), NA)` the
 condition is TRUE for every stock, so the third argument is unreachable dead
@@ -1161,9 +1158,23 @@ everything. Concretely, `2 * x^3` is `2 * (x^3)`, `x^2 + 1` is `(x^2) + 1`, and
 
 Write `x^y` in preference to `Pow(x, y)`; they are the same operation. `x^0.5`
 is a square root (P123 has no square-root function) and `x^(1/n)` an n-th
-root. How a leading minus sign binds to `^`, and whether `a^b^c` associates
-left or right, are not documented - parenthesize instead of guessing:
-`(-x)^2`, `(a^b)^c`.
+root.
+
+The official reference does not specify a leading minus or chained `^`. Evaluated live on
+2026-10-31, the results are:
+
+| Expression | Result | Reading |
+|---|---|---|
+| `-2^2` | 4 | `(-2)^2`: a leading minus binds tighter than `^` (also for `-Close(0)^2`, which is positive) |
+| `-(2^2)` | -4 | explicit parentheses give the usual math reading |
+| `2^3^2` | 64 | `(2^3)^2`: a chain associates left |
+| `2*3^2` | 18 | `^` before `*` |
+| `10-2^2` | 6 | `^` before binary `-` |
+| `27^1/3` | 9 | `(27^1)/3` |
+| `27^(1/3)` | 3 | parentheses make a cube root |
+| `2^-1` | 0.5 | a negative exponent is accepted |
+| `(-4)^0.5` | NA | negative base with a fractional exponent |
+| `0^0` | 1 | |
 
 ### Precedence operators
 
@@ -1186,7 +1197,9 @@ TRUE, this operator returns the value.
 Precedence: the operator binds to the nearest element on its right, or to the
 contents of parentheses if used, and only `^` binds tighter. So
 `@r:Close(0)/Close(5)` assigns just `Close(0)` to `@r`, while `@r:a^2` assigns
-`a^2`. Parenthesize to capture a whole formula: `@r:(Close(0)/Close(5))`.
+`a^2`. Parenthesize to capture a whole formula: `@r:(Close(0)/Close(5))`. Verified live on
+2026-10-31: `@v:2*3+@v` returns 8 (that is `(@v:2)*3 + @v`) and `@v:2^3+@v` returns 16 (`@v:(2^3)`
+plus `@v`), so the variable is also readable later in the same formula.
 
 ## Common Mistakes
 

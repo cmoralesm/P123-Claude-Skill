@@ -1,4 +1,4 @@
-<!-- name-whitelist: ItemName NAHandling barsAgo Q PQ PYQ PTM A PY Gr%PQ Gr%PYQ Gr%TTM Gr%A Gr%3Y Gr%5Y PSQ PSA %SalesQ %SalesA 3YAvg 5YAvg -->
+<!-- name-whitelist: ItemName NAHandling barsAgo Q PQ PYQ PTM A PY Gr%PQ Gr%PYQ Gr%TTM Gr%A Gr%3Y Gr%5Y PSQ PSA %SalesQ %SalesA 3YAvg 5YAvg Gr%PQTTM Gr%10Y RSD%ANN RSD%TTM RegEstANN RegGr%ANN RegEstTTM RegGr%TTM %AssetsQ %AssetsA -->
 # Financials - Portfolio123 Reference
 
 This file documents the **Financials** category of the Portfolio123 Factor Reference: income-statement, balance-sheet, and cash-flow line items. Each line item is exposed both as a function (e.g. `Sales(0, TTM)`) and as a family of pre-built factors (e.g. `SalesTTM`, `SalesGr%PYQ`). For valuation and profitability ratios built on top of these items see [Ratios & Statistics](ratios-statistics.md); for analyst estimates see [Estimates](estimates.md); for the formula-language rules that govern the `offset`/`type` arguments see [Misc](misc.md).
@@ -21,7 +21,11 @@ ItemName(offset, type[, NAHandling])
 
 For QTR and ANN types the value is taken straight from the filing at the given offset. TTM values are computed two ways: income-statement and cash-flow items sum the trailing four quarters, while balance-sheet items average the trailing four quarters.
 
-Each item also auto-generates pre-built factors (no parentheses). The most common suffixes:
+Each item also auto-generates pre-built factors (no parentheses). The expansions below were checked
+against live data on 2026-10-31: `Sales` through every suffix, plus `NetIncBXor`, `AstTot`, `CapEx`,
+`EBITDA`, `OpInc`, `CashFl`, `FCF` and `BookVal` for the per-share ones, on IBM, INTC and MSFT.
+P123's own suffix table is wrong for `PSQ`/`PSA` and loose for `Gr%`, so use this one. Below, `a` is
+the newer value and `b` the older one.
 
 | Suffix | Meaning | Corresponding call |
 |---|---|---|
@@ -32,18 +36,38 @@ Each item also auto-generates pre-built factors (no parentheses). The most commo
 | `PTM` | Prior trailing twelve months | `(4, TTM)` |
 | `A` | Recent annual | `(0, ANN)` |
 | `PY` | Prior year | `(1, ANN)` |
-| `Gr%PQ` | Growth vs prior quarter | `(0, QTR) / (1, QTR)` |
-| `Gr%PYQ` | Growth vs prior-year quarter | `(0, QTR) / (4, QTR)` |
-| `Gr%TTM` | Growth vs prior TTM | `(0, TTM) / (4, TTM)` |
-| `Gr%A` | Growth vs prior annual | `(0, ANN) / (1, ANN)` |
-| `Gr%3Y` | 3-year annualized growth | `(0, ANN) / (3, ANN) annualized` |
-| `Gr%5Y` | 5-year annualized growth | `(0, ANN) / (5, ANN) annualized` |
-| `PSQ` | Per share (quarterly) | `(0, QTR) / Shares(0, QTR)` |
-| `PSA` | Per share (annual) | `(0, ANN) / Shares(0, ANN)` |
-| `%SalesQ` | Percent of quarterly sales | `(0, QTR) / Sales(0, QTR)` |
-| `%SalesA` | Percent of annual sales | `(0, ANN) / Sales(0, ANN)` |
-| `3YAvg` | 3-year average | `LoopAvg("function(CTR, ANN)", 3)` |
-| `5YAvg` | 5-year average | `LoopAvg("function(CTR, ANN)", 5)` |
+| `Gr%PQ` | Percent growth vs prior quarter | `100 * (a - b) / Abs(b)` with `a = (0, QTR)`, `b = (1, QTR)` |
+| `Gr%PYQ` | Percent growth vs prior-year quarter | same, with `a = (0, QTR)`, `b = (4, QTR)` |
+| `Gr%TTM` | Percent growth vs prior TTM | same, with `a = (0, TTM)`, `b = (4, TTM)` |
+| `Gr%PQTTM` | Percent growth of TTM vs TTM one quarter ago | same, with `a = (0, TTM)`, `b = (1, TTM)` |
+| `Gr%A` | Percent growth vs prior annual | same, with `a = (0, ANN)`, `b = (1, ANN)` |
+| `Gr%3Y`, `Gr%5Y`, `Gr%10Y` | n-year annualized growth (CAGR) | `100 * ((a / b) ^ (1 / n) - 1)` with `a = (0, ANN)`, `b = (n, ANN)` |
+| `RSD%ANN` | Relative standard deviation of 10 annual values | `LoopRelStdDev("function(CTR, ANN)", 10, 0, 1, 1)` |
+| `RSD%TTM` | Relative standard deviation of 10 TTM values two quarters apart (5 years) | `LoopRelStdDev("function(CTR*2, TTM)", 10, 0, 1, 1)` |
+| `RegEstANN`, `RegGr%ANN` | Ten-year annual regression estimate, growth | `Eval(LinReg("function(CTR, ANN)", 10), EstimateY(0), NA)`, `RegGr%(1)` in place of `EstimateY(0)` |
+| `RegEstTTM`, `RegGr%TTM` | Five-year TTM regression estimate, growth | `Eval(LinReg("function(CTR*2, TTM)", 10), EstimateY(0), NA)`, `RegGr%(2)` in place of `EstimateY(0)` |
+| `PSQ` | Per share, quarterly: **fully diluted** | `(0, QTR) / SharesFD(0, QTR)` |
+| `PSA` | Per share, annual: **fully diluted** | `(0, ANN) / SharesFD(0, ANN)` |
+| `%SalesQ`, `%SalesA` | Percent of sales | `(0, QTR) / Sales(0, QTR)`, `(0, ANN) / Sales(0, ANN)` (as documented; not tested) |
+| `%AssetsQ`, `%AssetsA` | Percent of assets | `(0, QTR) / AstTot(0, QTR)`, `(0, ANN) / AstTot(0, ANN)` (as documented; not tested) |
+| `3YAvg` | 3-year average of the annual values | `LoopAvg("function(CTR, ANN)", 3)` |
+| `5YAvg` | 5-year average of the annual values | `LoopAvg("function(CTR, ANN)", 5)` |
+
+Three behaviors the suffix names do not tell you:
+
+- **Per-share means fully diluted.** P123's page writes the denominator as `Shares(0, QTR)`, but on
+  every item tested `PSQ` and `PSA` equal the item divided by `SharesFD` to six significant digits; dividing by
+  `Shares` (undiluted) misses by 0.1% to 1% on IBM and MSFT and by 10% on INTC's annual figures. This covers
+  roughly 210 `PSQ`/`PSA` factors.
+- **Growth uses the absolute value of the base.** `Gr%A` on INTC's net income, from -18,756 to -267,
+  is +98.6, not the -98.6 that `100 * (a / b - 1)` gives. The CAGR suffixes (`Gr%3Y` and longer) return
+  NA when `a / b` is negative, because a negative base cannot take a fractional power.
+- **A bare `5Y` is not `5YAvg`.** Seven legacy margin and payout factors use `5Y` for a ratio of
+  five-year sums; see [Ratios & Statistics](ratios-statistics.md#5y-versus-5yavg).
+
+Ratio families (`NPMgn%`, `AstTurn`, and so on) also list `PSQ`, `%SalesQ` and `%AssetsQ` variants. The
+suffix system was applied to every item mechanically, so these are ratios of ratios with no investment
+meaning; do not rank on them. The official page spells the assets suffix `%AssetQ`, which is not a code.
 
 Availability varies by item; `PTM` uses interim periods (offset 4, not 1). The full per-item factor lists appear under each item below.
 

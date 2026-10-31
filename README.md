@@ -16,9 +16,24 @@ Claude into a reliable Portfolio123 (P123) assistant: writing screen rules and f
 building ranking-system XML, replicating published factors, and pulling data through the REST API
 with the official `p123api` Python wrapper.
 
-**v4.1.1** is the current release. 4.1.0 was the first public release since v3.0.0 and carried two
-releases' worth of work; 4.1.1 adds live verification of the regional universe IDs, the last item
-still open from the v3.0.0 community reports.
+**v4.2.0** is the current release, a live-data audit of the skill. A Portfolio123 forum member
+noticed that the skill described `NPMgn%5Y` as an average of yearly margins; the factor is in fact a
+ratio of five-year sums, and the same holds for six sibling factors. Checking that claim against the
+live API turned up more places where P123's own documentation and the factor's behavior part ways, all
+corrected here:
+
+- **The seven legacy `5Y` factors are ratios of five-year sums**, not averages (`NPMgn%5Y`,
+  `GMgn%5Y`, `OpMgn%5Y`, `PTMgn%5Y`, `EBITDAMgn%5Y`, `SGA2Sales%5Y`, `PayRatio5Y`). The average is the
+  `5YAvg` twin.
+- **The per-share suffixes (PSQ and PSA, about 210 factors) divide by fully diluted shares**, not the
+  undiluted `Shares` that P123's suffix table names.
+- **`FCFYield` is a percentage**, like the other pre-built yields; P123's formula for it omits the 100.
+- **Operator behavior is now measured, not guessed**: a leading minus binds tighter than `^` (`-2^2`
+  is 4), chains associate left (`2^3^2` is 64), and `SetVar` inlining works in a single formula.
+- Smaller fixes: growth suffixes use the absolute value of the base, `AvgDailyTot` is in plain dollars,
+  `Sharpe2Y` cannot be rebuilt with `Sharpe`, and a broken anchor in `estimates.md`.
+
+4.1.1 had verified the regional universe IDs, and 4.1.0 was the first public release since v3.0.0.
 
 **New in 4.1** - a factor-replication reference and an API refresh:
 
@@ -175,6 +190,14 @@ unless run with `--execute` and a typed confirmation. See [scripts/README.md](sc
 - Scripts compile and their happy paths were exercised live (read-only) before the 4.0.0 release.
   The 4.1 script changes are documentation, install guidance and one optional `print_quota`
   parameter; they were re-verified by compilation, not by new live calls.
+- **Live-data audit (4.2.0, 2026-10-31).** P123's descriptions were tested against the live API on IBM,
+  INTC and MSFT, the three tickers a data-license-free account can read. Every skill-authored formula
+  in `SKILL.md`, the ranking-XML example and the replication recipes runs without error; every
+  line-item suffix (from the quarterly one through 5YAvg, growth, RSD and regression included) matches its documented expansion
+  except the per-share ones; and the shared operator rules were measured instead of inferred. The
+  tests are limited to those three tickers and one date, so a rule that holds for them is stated as
+  verified on them, not as proven for every stock. The ranking-node weight rule and `POST /rank/create`
+  remain unconfirmed (those need a write to the account).
 - Known gaps are documented inline: 14 Industry & Sector classification detail pages are
   login-gated on P123's site (covered from dictionary data); the AI Factor per-call credit
   cost is documented with both conflicting official sources.

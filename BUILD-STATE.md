@@ -2,6 +2,50 @@
 
 Claude Code: update this file after completing each phase/gate (see ../PLAN.md).
 
+## v4.2.0 - live-data audit (2026-10-31)
+
+**No re-extraction.** `v4.2/` is `v4.1/` plus the corrections below. Method: every place where the
+skill restates a P123 formula, suffix rule or example was evaluated through the `p123` MCP server
+(`p123_data`, read-only, IBM/INTC/MSFT only because the account has no `/data` license) and compared
+with the claim. 16 credits spent of the 2000-credit server budget; no write tool was enabled.
+Raw outputs and the request files live in `buildnotes/audit/`.
+
+| Check | Result |
+|---|---|
+| Forum claim: `NPMgn%5Y` vs `NPMgn%5YAvg` | **Confirmed**: ratio of sums vs mean of ratios, 3/3 tickers to 6 decimals |
+| Same split for the other legacy `5Y` factors | **Confirmed**: 5 margins x 3 tickers exact; `PayRatio5Y` exact on IBM, MSFT |
+| 25 suffix families vs documented expansion | 23 match as documented; `PSQ`/`PSA` differ (diluted shares); `Gr%` needs `Abs(b)` for negative bases |
+| Per-share denominator on 7 bases, Q and A | `SharesFD` on all; `Shares` off by 0.06% to 17% |
+| Operators on constants | `-2^2` = 4, `2^3^2` = 64, `(-4)^0.5` = NA, `:` binding, same-formula `@v` |
+| `SetVar` inline vs direct vs `Eval` wrapper | identical values (NEW-6 closed) |
+| `Ret%Chg(252, 21)` vs `(231, 21)` | 273-bar and 252-bar spans; `(231, 21)` is 12-1 |
+| 45 formulas from `SKILL.md` + ranking XML | all execute |
+| 72 recipe factors + 39 recipe expressions | all execute; 2 bare-name prose formulas were not runnable (fixed) |
+| Official `X = expression` identities (39 found, 22 tested) | 18 reproduced; 4 need a correction or stay open (`FCFYield` scale, `OCFYield` bare name, `Sharpe2Y` limit, `DepAmort2GP` on MSFT) |
+| `GET /dataSeries`, `GET /stockFactor` | routed (404 on unknown name, not 405) |
+| `GET /rank` XML key | **not settled**: the MCP tool returns the text under both keys |
+
+### Findings
+
+| ID | Severity | Finding | Status |
+|---|---|---|---|
+| NEW-14 | Major | Legacy `5Y` margin/payout factors are ratios of sums; skill repeated P123's "averaging" wording | FIXED |
+| NEW-15 | Major | Per-share suffix table named `Shares`; reality is `SharesFD` | FIXED |
+| NEW-16 | Major | 4.1.0 error: `FCFYield` described as a plain ratio; it is a percentage | FIXED |
+| NEW-17 | Minor | `Gr%` growth is `100*(a-b)/Abs(b)`; CAGR NA on negative ratio | FIXED (documented) |
+| NEW-18 | Minor | Eval 3 units (`AvgDailyTot` in dollars) | FIXED |
+| NEW-19 | Minor | `SGA2Sales%5Y` mislabeled "Operating Margin" in P123's dictionary | FIXED (noted) |
+| NEW-20 | Minor | Broken Contents anchor `#recs-opinions` in `estimates.md` (was NEW-2) | FIXED |
+| NEW-6 | Minor | Same-formula `SetVar` visibility | **CLOSED**: verified live |
+| NEW-21 | Open | `DepAmort2GPTTM` vs documented `DepAmort/GrossProfit` differs on MSFT only | OPEN |
+| NEW-22 | Open | Industry variants of the `5Y` pairs not tested | OPEN |
+| NEW-8 | Open | `GET /rank` XML key and `POST /rank/create` shape | OPEN (write or raw body needed) |
+| NEW-4 | Open | `Weight="0"` equal-weight rule is reporter-only | OPEN (write needed) |
+
+The strict anchor check (GitHub slug, no whitespace collapsing) now covers 21 markdown files with 0
+broken links. `build/check_names.py` is green on `SKILL.md` and all 16 references; `gate2_checks.py`
+re-pointed at `v4.2/references` passes 2.1 to 2.4.
+
 ## v4.1.0 - replication reference + API refresh (2026-09-17)
 
 **No re-extraction, no re-build.** `v4.1/` started as a byte-for-byte copy of `v4/` (the finished
@@ -349,11 +393,11 @@ reported by the editing agents.
 | ID | Severity | Finding | Status |
 |---|---|---|---|
 | NEW-1 | Major | `check_names.py` failed on `misc.md` (9 unknown names) and `ranking-system-xml.md` (2). All 11 were **new v4 prose**, not new claims: backticked `Sqrt` / `Exp` / `Power` outside the exempted "Wrong (do not use)" column (misc.md 427, 428, 461, 462, 1144, 1178, 1180; rxml 463), plus placeholder tokens `X` (misc.md 653), `A` (misc.md 697) and the example composite name `Quality` (rxml 157). v3 was clean on both files, so this was a v4 regression in the gate, not in the content. | **FIXED** (repair pass) - resolved by rewording, not whitelisting; see below |
-| NEW-2 | Minor | Pre-existing broken anchor, inherited from v3 and **not** introduced here: the Contents entry at `references/estimates.md:18` targets `#recs-opinions` but the "Recs & Opinions" heading at line 585 slugs to `recs--opinions` (GitHub keeps both spaces around the dropped `&`). Gate 2 missed it because `gate2_checks.py:github_slug` collapses `\s+` to a single hyphen. The four v4-adjacent `&` anchors (`#quotas--costs`, `#insider--institutional`, `#watchlists-holdings--opinions`, `#worked-example--penman--pope`) are correctly double-hyphenated. | **OPEN** - out of this release's scope (untouched file) |
+| NEW-2 | Minor | Pre-existing broken anchor, inherited from v3 and **not** introduced here: the Contents entry at `references/estimates.md:18` targets `#recs-opinions` but the "Recs & Opinions" heading at line 585 slugs to `recs--opinions` (GitHub keeps both spaces around the dropped `&`). Gate 2 missed it because `gate2_checks.py:github_slug` collapses `\s+` to a single hyphen. The four v4-adjacent `&` anchors (`#quotas--costs`, `#insider--institutional`, `#watchlists-holdings--opinions`, `#worked-example--penman--pope`) are correctly double-hyphenated. | **OPEN** - out of this release's scope (untouched file) | **RESOLVED in 4.2.0** (`recs--opinions`).
 | NEW-3 | Minor | CRLF line endings in `estimates.md`, `financials.md`, `ratios-statistics.md`. Present identically in v3; none of the three was edited for v4. | **OPEN** - pre-existing, cosmetic |
 | NEW-4 | Minor | The `Weight="0"` rule ships on **single-source evidence**: the reporter's quote of P123's node-weight range. Nothing in `build/data/`, `build/cache/` or `api-docs.yml` documents ranking-node weights at all, so it could not be corroborated here. The mixed zero/positive row in the new Weights table is deliberately non-committal for the same reason. Precedent: the whole ranking XML schema has this provenance (v2.0.0, "validated against working P123 systems"). | **ACCEPTED** - disclosed here, in CHANGELOG §Credits and (since the repair pass) in README "Accuracy & verification"; confirm against a live ranking system when convenient |
 | NEW-5 | Major | `ranking-system-xml.md` shipped a second, undisclosed XML-syntax claim: that P123's Ranking System text editor writes `Weight="50%"` and that the percent form is equally accepted, with an instruction never to normalize between the two forms. Unlike NEW-4 this was not traceable even to the reporter - it appears in no local artifact, in no v3 file, in no defect report, and in no example in the file itself, while all three attribute tables type `Weight` as `number`. An unsourced syntax fact that the skill is told never to correct is asymmetrically unsafe. | **FIXED** (repair pass) - paragraph deleted from `ranking-system-xml.md` and the matching CHANGELOG "Added" clause removed. The three attribute tables keep `number`, which is now consistent |
-| NEW-6 | Minor | The inline `SetVar` idiom (`SetVar(@r, f) * @r * Abs(@r)`) relies on `@r` being readable to the right of its own call in the **same** formula. `details.json` (`SetVar`, `ShowVar`) documents only "used in **subsequent rules**", and every official example - including the `AccountOpenBar` one in `build/cache/…041ed859.html` - defines in one rule and reads in the next. Same-formula slipstreaming is documented for the `:` operator only, which is the operator v4 tells the reader not to use here. The inline form is nonetheless the *only* option in single-formula contexts (ranking nodes, API `formulas`). | **DISCLOSED** (repair pass) - `misc.md` → `SetVar` now carries a provenance caveat, prefers the documented two-rule form where a rule list exists, and keeps the inline form for single-formula contexts; `advanced-functions.md` → `ShowVar` points at it. Confirm with one live screen run when convenient. **Risk downgraded (owner pass, 2026-07-28):** the v3 idiom this release retires, `Eval(SetVar(@r, f), @r * Abs(@r), NA)`, reads `@r` inside the same formula as well, and the reporter names it as the form the skill was already emitting in working use - so same-expression visibility is presupposed by both forms, not introduced by inlining, and no `Eval` fallback would recover anything if it failed. The caveat in `misc.md` now says so, to stop a future pass from "fixing" the inline form by reverting to the wrapper |
+| NEW-6 | Minor | The inline `SetVar` idiom (`SetVar(@r, f) * @r * Abs(@r)`) relies on `@r` being readable to the right of its own call in the **same** formula. `details.json` (`SetVar`, `ShowVar`) documents only "used in **subsequent rules**", and every official example - including the `AccountOpenBar` one in `build/cache/…041ed859.html` - defines in one rule and reads in the next. Same-formula slipstreaming is documented for the `:` operator only, which is the operator v4 tells the reader not to use here. The inline form is nonetheless the *only* option in single-formula contexts (ranking nodes, API `formulas`). | **DISCLOSED** (repair pass) - `misc.md` → `SetVar` now carries a provenance caveat, prefers the documented two-rule form where a rule list exists, and keeps the inline form for single-formula contexts; `advanced-functions.md` → `ShowVar` points at it. Confirm with one live screen run when convenient. **Risk downgraded (owner pass, 2026-07-28):** the v3 idiom this release retires, `Eval(SetVar(@r, f), @r * Abs(@r), NA)`, reads `@r` inside the same formula as well, and the reporter names it as the form the skill was already emitting in working use - so same-expression visibility is presupposed by both forms, not introduced by inlining, and no `Eval` fallback would recover anything if it failed. The caveat in `misc.md` now says so, to stop a future pass from "fixing" the inline form by reverting to the wrapper | **RESOLVED in 4.2.0**: verified live, see the 4.2.0 section.
 
 **NEW-1 remedy (applied 2026-07-28, repair pass).** Three options existed: whitelist the trap
 names, teach `check_names.py` to exempt more table columns, or reword. The second is out of

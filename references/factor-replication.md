@@ -106,11 +106,17 @@ Translation traps:
 - **Losses.** `1/PEExclXorTTM` returns NA for a loss-maker and drops the stock out of the node;
   P123's own detail page for `EarnYield` says it is preferred over P/E precisely because losses
   produce negative yields rather than undefined values. `EarnYield` takes **no period suffix**.
-- **The pre-built yields are not on one scale.** `EarnYield` is `100 * EPSExclXorTTM / Price`,
-  `OCFYield` is `100 * OperCashFl / MktCap` and `EBITDAYield` is `100 * EBITDATTM / EV` - all
-  percentages - but `FCFYield` is documented as `FCFTTM / MktCap`, a plain ratio. Summing them
-  inside one formula node mis-weights `FCFYield` by two orders of magnitude. Ranking them as
-  separate nodes is unaffected.
+- **The pre-built yields are all percentages.** `EarnYield` is `100 * EPSExclXorTTM / Price`,
+  `OCFYield` about `100 * OperCashFlTTM / MktCap`, `FCFYield` about `100 * FCFTTM / MktCap` and
+  `EBITDAYield` `100 * EBITDATTM / EV`; live values on IBM are 4.55, 6.51, 5.76 and 6.72. P123 writes the
+  `FCFYield` formula without the 100 (`FCFTTM / MktCap`), but the factor returns a percentage like the
+  others (checked 2026-10-31), so the pre-built yields can share one formula node. A hand-written
+  `FCFTTM / MktCap` is a plain ratio, a hundred times smaller; do not mix it with them.
+- **Pre-built ratios and their formulas are close, not identical.** `Pr2SalesTTM`, `Pr2BookQ`,
+  `Pr2CashFlTTM`, `OCFYield` and `FCFYield` differ from the `MktCap`-based formulas written above by
+  0.1% to 1% on IBM, INTC and MSFT, because they use a different share count than `MktCap`. The
+  enterprise-value ones (`EBITDAYield`, `EV2EBITDATTM`, `OpIncYield`, `EV2SalesTTM`) match their
+  formulas exactly. Rank on the pre-built factor or on the formula, not on a mix of both.
 - **Two different scalings.** `EBITDAYield`, `OpIncYield` and `EV2SalesTTM` are scaled by
   **enterprise value**; `EarnYield`, `OCFYield`, `FCFYield`, `Pr2SalesTTM` and `ShareholderYield`
   are scaled by **market cap**. Mixing the two inside one composite double-counts leverage.
@@ -408,7 +414,7 @@ Translation traps:
   initiated dividend shows up immediately in `Yield` and a year late in the trailing forms.
   `Yield` takes no period suffix. Five-year average: `Yield5YAvg`.
 - **`ShareholderYield` can switch definition underneath you.** It is documented as
-  `Yield + 100 * (EqPurch - EqIssued) / MktCap`, falling back to
+  `Yield + 100 * (EqPurchTTM - EqIssuedTTM) / MktCap` (it reproduces the factor exactly on IBM and INTC), falling back to
   `Yield + 100 * (1 - SharesQ / SharesPYQ)` when the cash-flow items are NA. It therefore inherits
   `Yield`'s forward dividend basis on one half and a trailing basis on the other. If the
   construction is specifically about repurchase cash flow, build the buyback yield yourself so the
@@ -473,7 +479,7 @@ factor being built.
 | `AstTotGr%TTM` | `AstTotGr%A` | The TTM form compares two overlapping four-quarter averages, not two balance-sheet dates. |
 | `PEExclXorTTM` ranked `Lower` | `EarnYield` ranked `Higher` | A loss makes P/E non-computable and drops the stock out of the node; the yield form ranks it last instead. |
 | `EV2EBITDATTM` ranked `Lower` | `EBITDAYield` ranked `Higher` | Negative EBITDA makes the multiple negative, which is the *best* rank under `Lower`. |
-| `FCFYield` summed with `EarnYield` | Separate nodes | `FCFYield` is a plain ratio; the other yields are percentages, so a sum mis-weights it a hundredfold. |
+| mixing a hand-written `FCFTTM / MktCap` with the pre-built yields | `FCFYield`, or `100 * FCFTTM / MktCap` | The pre-built yields are percentages; the bare ratio is a hundred times smaller. |
 | `Pr2BookQ` when the definition must be exact | `BookValQ` over `MktCap` | P123's own detail page describes `Pr2Book`'s denominator with the tangible-book wording. |
 | `SUEQ1` presented as the paper's measure | `SUEQ1`, denominator disclosed | P123 standardizes by analyst dispersion, not by time-series forecast-error dispersion. |
 | `Pct52WH` when direction must be certain | `Close(0)` over `HighVal(252)` | The pre-built factor's sign convention is not stated on any detail page. |

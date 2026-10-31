@@ -348,7 +348,7 @@ Median volume over the past number of bars.
 
 #### `AvgDailyTot(noBars [, offset])`
 
-Average daily dollar volume (price times volume) over the past number of bars.
+Average daily dollar volume (price times volume) over the past number of bars. The result is in plain currency units, not millions: IBM returns about 1.29e9 for `AvgDailyTot(63)`. `MktCap`, by contrast, is in millions, so a liquidity floor of one million dollars a day is `AvgDailyTot(63) > 1000000`.
 
 #### `MedianDailyTot(noBars [, offset])`
 
@@ -686,7 +686,7 @@ Correlation coefficient between the specified series.
 
 #### `Sharpe(range [, bars, offset])`
 
-A Sharpe-like ratio (not adjusted for the risk-free return).
+A Sharpe-like ratio (not adjusted for the risk-free return). `range` must be between 5 and 501 bars: P123 documents `Sharpe2Y` as `Sharpe(515, 5)`, a call the function itself rejects (`Parameter period must be between 5 and 501`), so the 2-year factor cannot be rebuilt with this function. `Sharpe1Y` equals `Sharpe(255, 5)` (checked 2026-10-31).
 
 #### `Sortino(range [, bars, offset])`
 

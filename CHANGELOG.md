@@ -1,5 +1,87 @@
 # Changelog
 
+## [4.2.0] - 2026-10-31
+
+Audit release. A Portfolio123 forum post reported that the skill described `NPMgn%5Y` as an average of
+yearly net margins. The claim is right, and the skill had simply repeated P123's own detail page.
+Instead of fixing the one factor, the report was checked against the live API (read-only, IBM, INTC
+and MSFT, 16 credits) and then used as a template: wherever the skill restated a P123 formula or
+description, the restatement was run against the data. That found more disagreements between P123's
+documentation and its behavior, plus one error that 4.1.0 introduced itself. No re-extraction: the
+dictionary, the counts, the API surface and the scripts are unchanged.
+
+### Fixed
+- **The seven legacy bare-`5Y` factors are ratios of five-year sums, not averages.** `NPMgn%5Y`,
+  `GMgn%5Y`, `OpMgn%5Y`, `PTMgn%5Y`, `EBITDAMgn%5Y`, `SGA2Sales%5Y` and `PayRatio5Y` divide the
+  five-year total of the numerator by the five-year total of the denominator; on IBM, INTC and MSFT
+  the match is exact to six decimals (INTC: `NPMgn%5Y` 3.4897 against `NPMgn%5YAvg` 1.0279). The
+  mean of the five annual ratios is the `5YAvg` twin. P123's detail pages describe the first group
+  as averages, and the skill had copied that wording. New section "5Y versus 5YAvg" in
+  `ratios-statistics.md`; the `PayoutRatio` Common Mistakes row had named `PayRatio5Y` as the
+  5-year average and is corrected.
+- **`SGA2Sales%5Y` was labeled "Operating Margin".** That is a copy error in P123's dictionary; the
+  factor is SG&A (including R&D) over sales, as a ratio of sums.
+- **Per-share suffixes divide by fully diluted shares.** P123's suffix table, which `financials.md`
+  reproduced, gives `Shares(0, QTR)`; on every item tested (`Sales`, `CapEx`, `EBITDA`, `OpInc`,
+  `CashFl`, `FCF`, `BookVal`, quarterly and annual) `PSQ` and `PSA` equal the item over `SharesFD`
+  to six significant digits, while undiluted `Shares` misses by 0.1% to 10%. About 210 factors.
+- **`FCFYield` is a percentage.** 4.1.0 repeated P123's formula (`FCFTTM / MktCap`) literally and warned
+  that the factor was a plain ratio a hundred times smaller than the other yields. It is not: IBM
+  returns 5.76, the same scale as `EarnYield` (4.55) and `OCFYield` (6.51). Wrong claim removed from
+  `factor-replication.md` and its Common Mistakes row replaced. P123's formula omits a factor of 100.
+- **Growth suffixes use `Abs` of the base.** `Gr%` is `100 * (a - b) / Abs(b)`, so INTC's net income
+  moving from -18,756 to -267 is +98.6; the CAGR suffixes return NA when the ratio is negative.
+  `financials.md` now carries a verified suffix table (`Q` through `5YAvg`, `RSD%`, `Reg*`).
+- **Eval 3 had the wrong units.** `AvgDailyTot(63) > 1` was meant as "above $1M a day", but the
+  function returns plain currency units (IBM about 1.29e9); the floor is `> 1000000`. Fixed in the
+  eval and noted in `technical.md`.
+- **`100 * OperCashFl / MktCap` and `Yield + 100 * (EqPurch - EqIssued) / MktCap` did not run**
+  (bare line-item names). The runnable `TTM` forms are given, with the share-count gap against the
+  pre-built factors stated (up to about 1%).
+- `estimates.md`: the Contents link `#recs-opinions` was broken (GitHub slugs `Recs & Opinions` as
+  `recs--opinions`); the 4.x link checker had collapsed whitespace and missed it.
+
+### Changed
+- **Operator behavior is measured, not hedged.** 4.0.0 told readers to parenthesize because the
+  reference was silent. Evaluated live: a leading minus binds tighter than `^` (`-2^2` is 4,
+  `-Close(0)^2` is positive), chains associate left (`2^3^2` is 64), `(-4)^0.5` is NA, `27^1/3` is 9,
+  `@v:2*3+@v` is 8 and `@v:2^3+@v` is 16. `SetVar(@r, f) * @r * Abs(@r)` returns exactly the
+  direct formula, which closes the single-source risk (NEW-6) that 4.0.0 carried.
+- `SKILL.md` gains the unary-minus and suffix traps in two short lines and one table row.
+- `api.md`: `#Bench` needs the `benchmark` request key, a 406 on `/data` can mean "no data license"
+  rather than "inactive account", and `GET /dataSeries` and `GET /stockFactor` answer an unknown
+  name with a routed 404 (confirming the 4.1.0 correction on the live API).
+- `technical.md`: `Sharpe2Y` is documented as `Sharpe(515, 5)`, which the function rejects (limit
+  501); `ratios-statistics.md`: `ROA%TTM` and `ROE%TTM` average the two balance-sheet endpoints, not
+  the four-quarter average.
+
+### Added
+- Evals 25 to 28 (28 total): `5Y` against `5YAvg`, the per-share denominator, operator precedence,
+  and the `FCFYield` scale.
+
+### Verified, no change needed
+- 23 of the 25 line-item suffix families match their documented expansions (`Sales`, three tickers;
+  the per-share pair is the exception); `TTM` sums flow items and averages balance-sheet items; `Beta1Y`/`Beta3Y`/`Beta5Y` equal `BetaFunc(5, 52, 0)`,
+  `(5, 156, 70)`, `(5, 261, 100)`; `TRSD1YD` equals `PctDev(251, 1, 0, 0, TRUE)`; `MScoreTATA`,
+  `ShareholderYield`, `AltmanX1` to `AltmanX5`, `AstTurnTTM`, `IntCovTTM`, `PEGLT`, `Sharpe1Y`.
+  `Ret%Chg(231, 21)` is 12-1 momentum and `Ret%Chg(252, 21)` is not. `FHist(f, n)` is the value `n`
+  weeks ago and `FHistAvg(f, 4, 13)` averages now, 13, 26 and 39 weeks ago (97 weekly dates, IBM).
+- 72 factors and 39 expressions in the replication recipes, and 45 formulas from `SKILL.md` and the
+  ranking-XML example, all execute.
+
+### Not resolved
+- The industry variants (`NPMgn%5YInd` and its pairs) were not tested.
+- `DepAmort2GPTTM` matches `DepAmortTTM / GrossProfitTTM` on IBM and INTC but not on MSFT (0.135
+  against 0.152); the cause was not found.
+- The XML field name on `GET /rank`, the shape of `POST /rank/create` and the `Weight="0"` rule
+  still need a write or a raw response.
+- Everything above was measured on IBM, INTC and MSFT at one date: a rule that held there is
+  verified there.
+
+### Credits
+- The `NPMgn%5Y` report came from a Portfolio123 forum member and reached the maintainer through
+  the forum; the live check, the sibling factors and everything below it were added in this release.
+
 ## [4.1.1] - 2026-09-17
 
 Closes the last open item carried from 3.0.0: the regional universe IDs reported in issue #5 /

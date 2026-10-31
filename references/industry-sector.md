@@ -68,6 +68,11 @@ Each factor reports a metric averaged across the stock's industry. The factor
 names end in the "Ind" suffix (industry). Grouped below by the official
 sub-group.
 
+Pairs such as `NPMgn%5YInd` and `NPMgn%5YAvgInd` mirror the stock-level split documented in
+[ratios-statistics.md](ratios-statistics.md#5y-versus-5yavg): the bare `5Y` stock factor is a ratio of
+five-year sums and the `5YAvg` one a mean of annual ratios. Whether the industry versions aggregate
+the same way was not tested.
+
 ### Descriptive
 
 | Factor | Description | Period |

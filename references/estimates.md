@@ -15,7 +15,7 @@ Coverage: **20 functions / 158 factors** - extracted from the official Factor Re
 - [EPS Revisions](#eps-revisions)
 - [Surprises](#surprises)
 - [Historical](#historical)
-- [Recs & Opinions](#recs-opinions)
+- [Recs & Opinions](#recs--opinions)
 - [Common Mistakes](#common-mistakes)
 - [See Also](#see-also)
 
