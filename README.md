@@ -94,6 +94,7 @@ portfolio123/
 │   ├── factor-replication.md     # 35 published-factor recipes, node direction/scope, traps
 │   └── ranking-system-xml.md     # Validated ranking XML schema; always read before XML work
 ├── scripts/                      # 9 runnable CLI examples + p123_helpers.py (see scripts/README.md)
+├── evals/evals.json              # 28 evaluation prompts (repo only; excluded from the .skill package)
 ├── docs/                         # repository assets (excluded from the .skill package)
 ├── BUILD-STATE.md                # build & verification log for this release
 ├── README.md · CHANGELOG.md · LICENSE · .gitignore
@@ -214,6 +215,16 @@ unless run with `--execute` and a typed confirmation. See [scripts/README.md](sc
   wrapper disagreements are stated as unresolved rather than adjudicated, because settling each
   needs one live call: the return shape of `POST /rank/create` and the XML field name on
   `GET /rank`.
+
+## Evals
+
+[`evals/evals.json`](evals/evals.json) holds 28 prompts in the skill-creator format (`id`, `prompt`,
+`expected_output`, `expectations`). They are regression tests for the failure modes this skill exists
+to prevent: invented factor names, one-argument `IsNA`, a made-up square-root function, `SetVar` wrapped in
+`Eval`, `Weight="0"` flagged as an error, camelCase upload kwargs, a bare `5Y` factor read as an average, and so on. Each
+one is written so that a model without the skill, or with an older version of it, fails. The folder is
+not part of the `.skill` package. When a correction lands in the references, add the prompt that would
+have caught it.
 
 ## Contributing
 

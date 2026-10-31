@@ -1,0 +1,309 @@
+{
+  "skill_name": "portfolio123",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a P123 formula for a valuation composite that averages the percentile ranks of earnings yield, price-to-sales, and EV/EBITDA, treating each so that cheaper is better.",
+      "expected_output": "A formula combining FRank calls, e.g. (FRank(\"EarnYield\") + FRank(\"Pr2SalesTTM\", #All, #ASC) + FRank(\"EV2EBITDATTM\", #All, #ASC)) / 3, with correct #ASC direction for the price ratios (lower is cheaper) and default/descending direction for earnings yield (higher is cheaper).",
+      "expectations": [
+        "Uses FRank with quoted formula arguments",
+        "Uses only verified factor names (EarnYield, Pr2SalesTTM, EV2EBITDATTM or close equivalents from ratios-statistics.md)",
+        "Sort direction is correct per factor: #ASC for price ratios, descending (default or #DESC) for yield",
+        "Does not invent names like EarnYield%TTM or EV2EBITDA_TTM"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In Portfolio123, what is the exact factor name for the Piotroski F-Score, and what range of values does it take?",
+      "expected_output": "PiotFScore, an integer score from 0 (worst) to 9 (best). Must not present PiotroskiF as valid.",
+      "expectations": [
+        "Names PiotFScore as the factor",
+        "States the 0-9 range",
+        "Does not present PiotroskiF (or any other spelling) as a valid code"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build P123 screen rules for liquid US stocks: market cap above $300M, average daily dollar volume above $1M over the last quarter, positive trailing earnings, and a dividend (treat missing dividend data as no dividend).",
+      "expected_output": "Rules like: MktCap > 300; AvgDailyTot(63) > 1000000; EPSExclXorTTM > 0 (or NetIncBXorTTM > 0); IsNA(DivPSTTM, 0) > 0 or Yield > 0 with NA handled via IsNA(x, 0) two-argument form.",
+      "expectations": [
+        "Uses MktCap and AvgDailyTot with verified spellings",
+        "Handles NA with the two-argument IsNA(expr, fallback) or '= NA' test, never one-argument IsNA(x)",
+        "All factor names exist in the reference files",
+        "Writes the dollar-volume floor in plain dollars (AvgDailyTot(63) > 1000000), not in millions: AvgDailyTot is in currency units while MktCap is in millions"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Generate Portfolio123 ranking-system XML with two equally weighted nodes: trailing PE (cheaper is better) and trailing ROE (higher is better).",
+      "expected_output": "Well-formed XML using the validated schema from references/ranking-system-xml.md: a RankingSystem root element containing StockFormula (and optionally Composite) nodes with Weight and RankType attributes (RankType Lower for PE, Higher for ROE), using PEExclXorTTM and ROE%TTM.",
+      "expectations": [
+        "Uses the schema from ranking-system-xml.md: RankingSystem root with StockFormula/Composite nodes and RankType attributes - not the legacy RankPerformance/SNode schema",
+        "XML is well-formed",
+        "PE node uses RankType Lower (cheaper is better) and ROE node uses RankType Higher",
+        "Uses PEExclXorTTM and ROE%TTM (verified names)"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "In a P123 ranking system, should debt-to-equity rank with lower values better or higher values better, and how do I express that direction for the node? Give the verified factor name too.",
+      "expected_output": "Lower is better for leverage; the node's rank direction is set accordingly (per ranking-system-xml.md RankType guidance); the factor is DbtTot2EqQ (or another verified DbtTot2Eq* variant).",
+      "expectations": [
+        "States lower-is-better for debt-to-equity",
+        "Explains the direction mechanism consistent with ranking-system-xml.md (RankType / lower-is-better setting)",
+        "Uses a verified factor name from the DbtTot2Eq family, not DebtToEq"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Using the p123api Python wrapper, run a saved-by-definition screen on the SP500 universe as of 2026-01-05: long only, max 25 holdings, rules MktCap > 1000 and ROE%TTM > 10, ranked by trailing PE ascending. Return a DataFrame.",
+      "expected_output": "client.screen_run({...}, to_pandas=True) with screen type 'stock', universe 'SP500', method 'long', maxNumHoldings 25, ranking {'formula': 'PEExclXorTTM', 'lowerIsBetter': True}, rules as plain formula dicts WITHOUT per-rule 'type', asOfDt '2026-01-05'.",
+      "expectations": [
+        "Calls screen_run with to_pandas=True",
+        "Rules carry no per-rule 'type' key (long-only screens reject it)",
+        "Payload keys match the documented schema (screen, universe, method, maxNumHoldings, ranking, rules, asOfDt)",
+        "Wraps the call in try/except p123api.ClientException or equivalent"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "With p123api, backtest a simple value screen (SP500, PEExclXorTTM < 15) from 2018 through 2025 and load the results into pandas. Which wrapper method do I use, and how do I get rolling results instead?",
+      "expected_output": "client.screen_backtest({...}, to_pandas=True) with screen definition plus startDt/endDt; rolling variant is client.screen_rolling_backtest. Mentions cost/quotaRemaining awareness.",
+      "expectations": [
+        "Uses screen_backtest and screen_rolling_backtest (verified method names)",
+        "Passes startDt/endDt date parameters",
+        "Uses to_pandas=True for DataFrame output"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Download the current ranks and node details for ranking system ID 432115 on the SP500 universe to a CSV using p123api.",
+      "expected_output": "client.rank_ranks({...}, to_pandas=True) with rankingSystem id, universe, asOfDt, and nodeDetails ('composite' or 'factor') - NOT the deprecated includeNodeDetails - then df.to_csv(...).",
+      "expectations": [
+        "Uses rank_ranks with to_pandas=True and saves via to_csv",
+        "Uses nodeDetails enum, not the deprecated includeNodeDetails",
+        "Payload includes ranking system id and universe"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Pull PEExclXorTTM, ROE%TTM, MktCap and 12-month momentum for every stock in the SP500 universe as of 2026-01-05 into a pandas DataFrame with 4-decimal precision using p123api.",
+      "expected_output": "client.data_universe({'universe': 'SP500', 'asOfDts': ['2026-01-05'], 'formulas': [...], 'includeNames': True, 'precision': 4}, to_pandas=True) with Ret%Chg(252, 21) or similar verified momentum formula.",
+      "expectations": [
+        "Uses data_universe with asOfDts as a list and formulas array",
+        "All formulas are verified names (Ret%Chg for momentum, not MOM or Momentum12M)",
+        "Uses to_pandas=True and precision parameter"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Call my P123 AI Factor predictor (id 4242) for current predictions with feature columns included, as a DataFrame. What date constraint applies if I want historical predictions instead, and what does the call cost?",
+      "expected_output": "client.aifactor_predict(4242, {'includeNames': True, 'includeFeatures': True}, to_pandas=True); historical predictions require asOfDt to be a Saturday; cost guidance per api.md: budget 20 credits per call (live-tested value; the spec example shows 1) and confirm via cost/quotaRemaining in the response.",
+      "expectations": [
+        "Uses aifactor_predict with predictor id and to_pandas=True",
+        "States the Saturday constraint for historical asOfDt",
+        "Gives the documented cost guidance (20 credits live-tested vs spec example 1, confirm via response cost field)"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Write a P123 universe filter that keeps only stocks in my custom list called WatchList and excludes everything in a list called Blacklist.",
+      "expected_output": "Universe filter rules using UnivSubset(\"WatchList\") and UnivExclude(\"Blacklist\") (or InList-based equivalents documented in universe-filters.md / misc.md), with correct quoting.",
+      "expectations": [
+        "Uses UnivSubset and UnivExclude (verified names; not UnivInclude/UnivFilter)",
+        "List names are passed as quoted strings",
+        "Names come from universe-filters.md / misc.md"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "I want to compare a stock's gross margin to its industry median on P123, and I am not sure which reference docs cover what I need. Which files should I read and why, and what is the formula?",
+      "expected_output": "Routing: ratios-statistics.md for GMgn% factors, advanced-functions.md for FMedian/Aggregate scope functions (and industry-sector.md for classification context). Formula like GMgn%TTM > FMedian(\"GMgn%TTM\", #Industry).",
+      "expectations": [
+        "Routes to ratios-statistics.md and advanced-functions.md (per the SKILL.md routing table)",
+        "Formula uses GMgn%TTM and FMedian (or Aggregate) with #Industry scope",
+        "All names verified; does not invent GrossMargin or IndMedian"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "In P123, write a formula for the square root of market cap, and one for the geometric mean of trailing PE and price-to-sales.",
+      "expected_output": "MktCap^0.5 and (PEExclXorTTM * Pr2SalesTTM)^0.5. P123 has no Sqrt function: ^ is the power operator and the only way to take a root. Pow(x, y) is merely the verbose spelling of x^y, so x^y is what should be written.",
+      "expectations": [
+        "Writes both roots with the ^ operator (MktCap^0.5), never Sqrt(MktCap) or any other root function",
+        "Does not answer with Pow(MktCap, 0.5); if Pow is mentioned at all it is called the verbose equivalent of x^y",
+        "States that P123 has no Sqrt function (and does not invent Exp or an e constant either)",
+        "Parenthesizes the product before raising it: (PEExclXorTTM * Pr2SalesTTM)^0.5, using verified factor names"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Write a P123 formula for 5-year compound annual sales growth using LoopProd. Then tell me how P123 parses 2 * MktCap^0.5 and MktCap^1/3.",
+      "expected_output": "LoopProd(\"Sales(CTR, ANN) / Sales(CTR + 1, ANN)\", 5)^(1/5) - 1. The ^ operator has the highest precedence in the language, so 2 * MktCap^0.5 is 2 * (MktCap^0.5), and MktCap^1/3 is (MktCap^1)/3 — a third of market cap, not a cube root. An n-th root needs explicit parentheses: MktCap^(1/3).",
+      "expectations": [
+        "Fractional exponent is parenthesized: ^(1/5), and the cube root is written MktCap^(1/3)",
+        "States that ^ binds tighter than * so 2 * MktCap^0.5 is 2 * (MktCap^0.5)",
+        "States that MktCap^1/3 parses as (MktCap^1)/3, i.e. not a cube root",
+        "Uses LoopProd with a quoted formula string and CTR; does not invent Sqrt, NthRoot or a Root function"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Write one P123 formula that defines a variable for momentum (total return over 252 bars, ending 21 bars ago) and returns its signed square (magnitude squared, sign preserved), reusing that variable.",
+      "expected_output": "SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r). SetVar always returns TRUE (1) and never the assigned value, which is exactly what allows the definition to be inlined: 1 * @r * Abs(@r) reduces to @r * Abs(@r). Eval(SetVar(@r, Ret%Chg(252, 21)), @r * Abs(@r), NA) is wrong — the condition is TRUE for every stock, so the NA branch is unreachable dead code.",
+      "expectations": [
+        "Inlines the assignment into the expression, e.g. SetVar(@r, Ret%Chg(252, 21)) * @r * Abs(@r) (an 'and' form is equally acceptable)",
+        "Does NOT wrap SetVar in Eval(...); if Eval is mentioned it is identified as a dead NA branch, not offered as the solution",
+        "States that SetVar returns TRUE (1), not the assigned value",
+        "Uses verified names only: Ret%Chg and Abs"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Two P123 problems. (a) My screen rule SetVar(@x, Ret%Chg(252, 21)) > 10 matches nothing. (b) My sell rule SetVar(@stop, Close(0) < SMA(50)) liquidates every position at the first rebalance. What is happening, and how do I fix each?",
+      "expected_output": "(a) SetVar returns TRUE (1), not the assigned value, so the rule evaluates 1 > 10 — false for every stock. Assign in its own rule and test the variable in the next one (SetVar(@x, Ret%Chg(252, 21)) then @x > 10), or inline the assignment. (b) A bare SetVar rule is always TRUE, and a sell rule that is TRUE always sells; negate it — !SetVar(@stop, ...) — to define the variable without triggering the sell.",
+      "expectations": [
+        "Diagnoses (a) as SetVar returning TRUE/1, so the comparison is 1 > 10",
+        "Fixes (a) by splitting the assignment and the test across rules, or by inlining; not by wrapping SetVar in Eval",
+        "Diagnoses (b) as a bare SetVar rule always evaluating TRUE and fixes it by negation, !SetVar(...)",
+        "Does not claim SetVar returns the assigned value, is out of scope, or needs Eval to work"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Review this P123 ranking system XML and tell me if anything is wrong with it:\n<RankingSystem RankType=\"Higher\">\n  <Composite Name=\"Quality\" Weight=\"30\" RankType=\"Higher\">\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>ROE%TTM</Factor></StockFactor>\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>OpMgn%TTM</Factor></StockFactor>\n    <StockFactor Weight=\"0\" RankType=\"Higher\" Scope=\"Industry\"><Factor>GMgn%TTM</Factor></StockFactor>\n  </Composite>\n</RankingSystem>",
+      "expected_output": "Nothing is wrong. Weight=\"0\" is legal and means equal weight, not a disabled node: P123 documents the node weight as [0] - 100 where 0 indicates equal weight, and 0 is the default when the attribute is omitted. Since no sibling carries a positive weight, the Quality composite's 30 points split evenly — 10 points each. Rewriting the three zeros as Weight=\"33\" (or deleting them) yields the same ranking system, so it is a cosmetic change to make only if asked.",
+      "expectations": [
+        "Does not report Weight=\"0\" as an error, a bug, or a disabled/ignored/skipped node",
+        "States that 0 (or an omitted Weight) means equal weight and that the parent's weight splits evenly across the children",
+        "Gives the even split for this system: each of the three factors takes one third of the composite's 30",
+        "Does not return a silently rewritten version of the XML; any reweighting is offered as optional and cosmetic"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "Using p123api, create a P123 data series and upload a CSV to it. The CSV's first row is a header, anything already stored should be overwritten, and the dates are yyyy-mm-dd. Also, how do I find that series by name later?",
+      "expected_output": "client.data_series_create_update({'name': ...}) returns dataSeriesId — persist it — then client.data_series_upload(series_id, data=CSV, contains_header_row=True, existing_data='overwrite', date_format='yyyy-mm-dd'). Every option is a snake_case Python kwarg; headerRow / existingData / dateFormat are the camelCase HTTP query parameters the wrapper builds itself and raise TypeError if passed as kwargs. To find the series by name later, use the keyword-only lookup client.data_series_info(name='...'), which P123 backed with GET /dataSeries on 2026-08-28; it returns a DataSeriesInfoResult and you read .dataSeriesId off it by attribute. Persisting the id at creation is still the cheaper path, but it is no longer the only one.",
+      "expectations": [
+        "Passes the payload as data=, not file=",
+        "Uses contains_header_row=True — never headerRow=True and never header_row=True",
+        "Uses snake_case existing_data='overwrite' and date_format='yyyy-mm-dd', not existingData / dateFormat",
+        "Captures dataSeriesId from data_series_create_update, and answers the lookup question with data_series_info(name=...) returning a DataSeriesInfoResult — not with the pre-2026-08-28 story that no GET /dataSeries exists and the call 405s"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Implement Novy-Marx gross profitability as a Portfolio123 ranking node. Give the factor or formula, the node's RankType and Scope, and name the denominator trap.",
+      "expected_output": "GrossProfitTTM / AstTotQ in a StockFormula node with RankType=\"Higher\"; GrossProfit%AssetsA is the pre-built annual form and GrossProfitA / AstTotA the explicit annual formula. The trap is the denominator: GMgn%TTM divides gross profit by sales, which is a margin, not gross profitability; and AstTotTTM is the four-quarter average, where the construction wants the period-end balance-sheet value AstTotQ. Scope: this skill ranks returns on assets within the industry (Scope=\"Industry\"), while the published sort is unconditional across the cross-section (Scope=\"Universe\") - say which one you built.",
+      "expectations": [
+        "Scales gross profit by assets, not by sales - does not substitute GMgn%TTM",
+        "Uses AstTotQ (period-end) and states that AstTotTTM is the four-quarter average, a different number",
+        "Does not invent a name such as GrossProfitability, GrossProfit2Assets or GP2A",
+        "States RankType=\"Higher\" and names the Scope it chose rather than leaving it implicit",
+        "Reports no alpha, t-statistic or return figure for the factor"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "What is the Portfolio123 factor for accruals? Build Sloan's accruals measure as a ranking node, and tell me how faithful it is to the paper.",
+      "expected_output": "No factor is named for accruals, but P123 does ship the accruals numerator: MScoreTATA, the Beneish total-accruals-to-total-assets component, documented as (NetIncBXorTTM - OperCashFlTTM) / AstTotQ. Use MScoreTATA, or write (NetIncBXorTTM - OperCashFlTTM) / AstTotTTM for average-assets scaling - they share a numerator and divide by different denominators, so pick one and say which. Node: RankType=\"Lower\", Scope=\"Universe\". Fidelity caveat: Sloan's original accrual is the balance-sheet change in non-cash working capital less depreciation; the cash-flow-statement form above is the standard modern substitute, and the answer should say it is a substitute.",
+      "expectations": [
+        "Names MScoreTATA (or builds the formula from NetIncBXorTTM and OperCashFlTTM) rather than claiming P123 has nothing",
+        "Does not invent AccrualsTTM, Accruals, TotalAccruals or a similar name",
+        "States RankType=\"Lower\" (more accruals is worse)",
+        "Distinguishes AstTotQ from AstTotTTM instead of treating the two constructions as identical",
+        "Says the cash-flow form is a substitute for Sloan's balance-sheet construction"
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "Write the P123 formula for 12-1 month momentum - the standard eleven-month formation window that skips the most recent month - and tell me whether Ret%Chg(252, 21) is it.",
+      "expected_output": "Ret%Chg(231, 21). Ret%Chg(bars, offset) is the total return over `bars` trading days ending `offset` bars ago, so Ret%Chg(252, 21) measures 252 bars ending 21 bars back - about thirteen months of window, not twelve. The eleven-month formation window is 252 - 21 = 231 bars, still ending 21 bars ago: Ret%Chg(231, 21). Bars are trading days, so a multi-country universe spans slightly different calendar periods.",
+      "expectations": [
+        "Gives Ret%Chg(231, 21) as the 12-1 formula",
+        "States explicitly that Ret%Chg(252, 21) spans about thirteen months and is NOT 12-1",
+        "Explains the argument semantics: total return over `bars` bars ending `offset` bars ago",
+        "Does not invent Mom12M, Momentum12_1 or a similar name"
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "I have a Portfolio123 data series named 'My Diffusion Index' but I never saved its id. Can I look it up by name with p123api? Show me the call.",
+      "expected_output": "Yes. P123 added GET /dataSeries on 2026-08-28, so the Data Series tag is no longer write-only. The wrapper method is keyword-only: client.data_series_info(name='My Diffusion Index'). It returns a DataSeriesInfoResult with .dataSeriesId and .name - attribute access, not subscripting. Pass exactly one of id= or name=; there is no series_id kwarg on this method, and no argument at all is validated, so a bare call issues a GET with no query string. A missing series raises ClientItemNotFoundException.",
+      "expectations": [
+        "Answers yes and does not claim the spec has no GET operation for Data Series",
+        "Does not repeat the 405 Method Not Allowed story as the current behaviour",
+        "Calls data_series_info with the keyword argument name= (not positionally, not series_id=)",
+        "Reads the id off the result by attribute (.dataSeriesId), not by subscripting"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "This worked on p123api 2.x and now raises TypeError:\ncreated = client.data_series_create_update({'name': 'My Diffusion Index'})\nprint(created['dataSeriesId'])\nWhat changed, how do I read the id, and where do cost and quotaRemaining come from now?",
+      "expected_output": "p123api 3.x returns typed objects instead of dicts from nine methods, this one included: data_series_create_update returns a DataSeriesResult. The objects are attribute-only - not subscriptable, not iterable, no .get() - so read created.dataSeriesId, and use vars(created) for a dict view. The generated constructor keeps only its declared fields and discards the rest of the body, including cost and quotaRemaining, so read those from the client instead: client.cost and client.quotaRemaining, which 3.1.0 sets after every successful request other than auth(). Both are None before the first call.",
+      "expectations": [
+        "Identifies the typed-object return as the 3.x change, not a payload or permissions problem",
+        "Fixes the access with attribute syntax (created.dataSeriesId), and does not suggest dict(created) or created.get(...)",
+        "States that the typed result drops cost/quotaRemaining and points at client.cost / client.quotaRemaining",
+        "Does not claim every p123api method now returns a typed object"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "I want a low-volatility ranking node on Portfolio123. Is BetaFunc(52, 104) a reasonable one-year beta? What should I use instead?",
+      "expected_output": "No. The signature is BetaFunc(period, samples[, min_samples, offset, series]), so BetaFunc(52, 104) asks for 104 samples of 52-bar returns - roughly twenty years of history - and min_samples defaults to 0, which P123 documents as 'all samples are required'. It returns NA for almost every stock. Use Beta1Y, which P123 documents as equivalent to BetaFunc(5, 52, 0): weekly (5-bar) returns, 52 of them, all required. For volatility rather than beta use TRSD1YD (documented as PctDev(251, 1, 0, 0, TRUE)) or PctDev with explicit parameters. Node: RankType=\"Lower\", Scope=\"Universe\".",
+      "expectations": [
+        "Says BetaFunc(52, 104) is wrong and explains why: 104 samples of 52-bar returns, with min_samples defaulting to all-required",
+        "Gives Beta1Y or BetaFunc(5, 52, 0) as the one-year beta",
+        "Gets the argument order right: period (bars per return) first, samples second",
+        "Names a verified volatility factor such as TRSD1YD or PctDev rather than inventing Volatility, IdioVol or Beta",
+        "States RankType=\"Lower\" for the node"
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "On Portfolio123, NPMgn%5Y and NPMgn%5YAvg give different numbers for the same stock. Which one is the average of the last five yearly net margins, and why do they differ?",
+      "expected_output": "NPMgn%5YAvg is the mean of the five annual net margins (LoopAvg of NPMgn%(CTR, ANN) over 5 years). NPMgn%5Y is a ratio of five-year sums: net income summed over the five fiscal years divided by sales summed over the same years, so large-sales years weigh more. P123's own detail page describes NPMgn%5Y as an average, which is wrong; live data on IBM, INTC and MSFT confirmed the ratio-of-sums behavior. The same split holds for GMgn%5Y, OpMgn%5Y, PTMgn%5Y, EBITDAMgn%5Y, SGA2Sales%5Y and PayRatio5Y.",
+      "expectations": [
+        "Says NPMgn%5YAvg is the average of the annual margins",
+        "Says NPMgn%5Y is the ratio of five-year net income to five-year sales, not an average of margins",
+        "Explains that the difference comes from weighting years by sales",
+        "Does not repeat P123's detail-page wording that NPMgn%5Y averages the yearly margins",
+        "Notes that the other legacy 5Y margin factors and PayRatio5Y behave the same way"
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "I want sales per share using P123's prebuilt factor. What share count does SalesPSQ divide by, and how would I reproduce it by hand?",
+      "expected_output": "SalesPSQ divides quarterly sales by fully diluted shares: Sales(0, QTR) / SharesFD(0, QTR). P123's suffix table says Shares(0, QTR), which is wrong; live checks matched SharesFD to six significant digits for every per-share item tested (PSQ and PSA alike), while undiluted Shares misses by 0.1% to 10%. SalesPSA is Sales(0, ANN) / SharesFD(0, ANN).",
+      "expectations": [
+        "States that the per-share suffix uses fully diluted shares (SharesFD)",
+        "Gives Sales(0, QTR) / SharesFD(0, QTR) as the by-hand equivalent",
+        "Does not give Shares(0, QTR) (undiluted) as the denominator",
+        "Uses only real names (SharesFD, SalesPSQ, SalesPSA)"
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "In a Portfolio123 formula, what do -2^2 and 2^3^2 evaluate to? I want the usual math reading of both.",
+      "expected_output": "In P123 -2^2 is 4, because a leading minus binds tighter than ^ (it is (-2)^2), and 2^3^2 is 64, because chains associate left ((2^3)^2). Neither matches ordinary math or Python. For the usual readings write -(2^2), which is -4, and 2^(3^2), which is 512.",
+      "expectations": [
+        "Says -2^2 is 4 in P123 and explains that the leading minus binds tighter than ^",
+        "Says 2^3^2 is 64 because the chain associates left",
+        "Gives -(2^2) and 2^(3^2) as the way to get the usual math results",
+        "Does not claim P123 follows the usual math or Python precedence here"
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "I added EarnYield and FCFYield into one formula node. Another assistant told me FCFYield is a plain ratio 100 times smaller than EarnYield, so I should multiply it by 100 first. Is that right?",
+      "expected_output": "No. P123 documents FCFYield as FCFTTM / MktCap, but the live factor returns a percentage like EarnYield, OCFYield and EBITDAYield (IBM about 5.8 against EarnYield 4.5), so no rescaling is needed. Only a hand-written FCFTTM / MktCap is a plain ratio. Multiplying the pre-built FCFYield by 100 would overweight it a hundredfold.",
+      "expectations": [
+        "Says the pre-built FCFYield is already in percent and should not be multiplied by 100",
+        "Notes that P123's formula omits the 100 but the factor does not",
+        "Notes that a hand-written FCFTTM / MktCap would be a plain ratio, 100 times smaller",
+        "Does not invent factor names"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `evals/evals.json` is now in the repository: 28 evaluation prompts (ids 1 to 28), previously kept
+  only in the maintainer's build tree. It is not part of the `.skill` package.
+
 ## [4.2.0] - 2026-10-31
 
 Audit release. A Portfolio123 forum post reported that the skill described `NPMgn%5Y` as an average of
